@@ -40,7 +40,7 @@ create table sys_rol_permiso(
 );
 
 create table sys_log_auditoria(
-    id_logo SERIAL PRIMARY KEY,
+    id_log SERIAL PRIMARY KEY,
     id_usuario INT NOT NULL,
     accion VARCHAR(50) NOT NULL,
     tabla_afectada VARCHAR(50) NOT NULL,
