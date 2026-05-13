@@ -1,41 +1,3 @@
--- Este archivo es el esquema de la base de datos
--- Los scripts por sprint se encuentran en la carpeta database/sprint#
-
--- Tabla de Catalogos
--- Catalogos a los que se hace referencia en la base de datos
-CREATE TABLE catalogo_sector (
-  id_sector SERIAL PRIMARY KEY,
-  nombre VARCHAR(80) UNIQUE NOT NULL
-);
-
-CREATE TABLE catalogo_puestos (
-  id_puesto SERIAL PRIMARY KEY,
-  nombre_puesto  VARCHAR(80) UNIQUE NOT NULL
-);
-
-CREATE TABLE catalogo_nivel_reglamento (
-  id_nivel_reglamento  SERIAL PRIMARY KEY,
-  nombre VARCHAR(80) UNIQUE NOT NULL
-);
-
-CREATE TABLE catalogo_estado_vigencia (
-  id_estado_vigencia  SERIAL PRIMARY KEY,
-  nombre VARCHAR(50) UNIQUE NOT NULL
-);
-
--- Datos semilla básicos
-INSERT INTO catalogo_sector (nombre) VALUES
-  ('Docente'), ('Estudiante'), ('Administrativo'),
-  ('Egresado'), ('Funcionario');
-
-INSERT INTO catalogo_estado_vigencia (nombre) VALUES
-  ('Vigente'), ('Histórico'), ('Derogado');
-
-INSERT INTO catalogo_nivel_reglamento (nombre) VALUES
-  ('Título'), ('Capítulo'), ('Artículo'),
-  ('Inciso'), ('Sub-inciso');
-
--- Tablas de Seguridad
 -- MÓDULO: Seguridad y Roles (Issue #0) 
 -- Sprint 2
 create table sys_usuario (
@@ -83,10 +45,8 @@ create table sys_log_auditoria(
     accion VARCHAR(50) NOT NULL,
     tabla_afectada VARCHAR(50) NOT NULL,
     detalle VARCHAR(200) NOT NULL,
-    ip_origen VARCHAR(45) NOT NULL,
-    registro_id INT,
+    registro_id INT NOT NULL,
     fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Constraint fk_log_usuario
         FOREIGN KEY (id_usuario) REFERENCES sys_usuario(id_usuario)
 );
-
