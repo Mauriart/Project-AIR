@@ -83,7 +83,8 @@ create table sys_log_auditoria(
     accion VARCHAR(50) NOT NULL,
     tabla_afectada VARCHAR(50) NOT NULL,
     detalle VARCHAR(200) NOT NULL,
-    registro_id INT NOT NULL,
+    ip_origen VARCHAR(45) NOT NULL,
+    registro_id INT,
     fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Constraint fk_log_usuario
         FOREIGN KEY (id_usuario) REFERENCES sys_usuario(id_usuario)
