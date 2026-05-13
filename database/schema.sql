@@ -8,11 +8,6 @@ CREATE TABLE catalogo_sector (
   nombre VARCHAR(80) UNIQUE NOT NULL
 );
 
-CREATE TABLE catalogo_sector (
-  id_sector SERIAL PRIMARY KEY,
-  nombre VARCHAR(80) UNIQUE NOT NULL
-);
-
 CREATE TABLE catalogo_puestos (
   id_puesto SERIAL PRIMARY KEY,
   nombre_puesto  VARCHAR(80) UNIQUE NOT NULL
