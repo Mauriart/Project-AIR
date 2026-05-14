@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS nombramiento CASCADE; 
 DROP TABLE IF EXISTS asambleista CASCADE;
+DROP TABLE IF EXISTS bitacora_asambleistas CASCADE;
 
 CREATE TABLE asambleista (
     asambleista_id SERIAL PRIMARY KEY,  -- Identificador único para cada asambleísta
@@ -30,6 +31,26 @@ CREATE TABLE nombramiento (
         REFERENCES asambleista(asambleista_id)
 );
 
+CREATE TABLE bitacora_asambleistas (
+    bitacora_id SERIAL PRIMARY KEY,
+
+    asambleista_id INTEGER NOT NULL,
+
+    cedula_anterior VARCHAR(12),
+    cedula_nueva VARCHAR(12),
+
+    nombre_anterior VARCHAR(150),
+    nombre_nuevo VARCHAR(150),
+
+    razon_cambio TEXT NOT NULL,
+
+    fecha_cambio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_bitacora_asambleista
+        FOREIGN KEY (asambleista_id)
+        REFERENCES asambleista(asambleista_id)
+);
+
 CREATE OR REPLACE FUNCTION validar_traslape_nombramientos() -- Función para validar que no haya traslape de nombramientos para un mismo asambleísta
 RETURNS TRIGGER AS
 $$
@@ -56,10 +77,53 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION registrar_cambio_asambleista()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+    IF OLD.nombre IS DISTINCT FROM NEW.nombre
+    OR OLD.cedula IS DISTINCT FROM NEW.cedula THEN
+
+        INSERT INTO bitacora_asambleistas (
+            asambleista_id,
+
+            cedula_anterior,
+            cedula_nueva,
+
+            nombre_anterior,
+            nombre_nuevo,
+
+            razon_cambio
+        )
+        VALUES (
+            OLD.asambleista_id,
+
+            OLD.cedula,
+            NEW.cedula,
+
+            OLD.nombre,
+            NEW.nombre,
+
+            'Actualizacion de identidad'
+        );
+
+    END IF;
+
+    RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER trigger_validar_traslape
 BEFORE INSERT ON nombramiento
 FOR EACH ROW
 EXECUTE FUNCTION validar_traslape_nombramientos();
+
+CREATE TRIGGER trigger_bitacora_asambleistas
+BEFORE UPDATE ON asambleista
+FOR EACH ROW
+EXECUTE FUNCTION registrar_cambio_asambleista();
 
 INSERT INTO asambleista (
     cedula,
@@ -106,3 +170,8 @@ FROM asambleista a
 JOIN nombramiento n
     ON a.asambleista_id = n.asambleista_id;
 
+CREATE INDEX idx_asambleista_cedula
+ON asambleista(cedula);
+
+CREATE INDEX idx_nombramiento_estado
+ON nombramiento(estado);
