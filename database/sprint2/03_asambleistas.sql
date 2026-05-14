@@ -23,3 +23,15 @@ CREATE TABLE nombramiento (
         REFERENCES asambleista(asambleista_id)
 );
 
+INSERT INTO asambleista (
+    cedula,
+    nombre,
+    correo_institucional
+)
+VALUES (
+    '1-1234-5678',
+    'Juan Morales',
+    'juan.morales@itcr.ac.cr'
+);
+
+SELECT * FROM asambleista;
