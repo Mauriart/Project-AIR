@@ -23,6 +23,37 @@ CREATE TABLE nombramiento (
         REFERENCES asambleista(asambleista_id)
 );
 
+CREATE OR REPLACE FUNCTION validar_traslape_nombramientos() -- Función para validar que no haya traslape de nombramientos para un mismo asambleísta
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+    IF EXISTS (
+        SELECT 1
+        FROM nombramiento
+        WHERE asambleista_id = NEW.asambleista_id
+        AND (
+            NEW.fecha_inicio <= COALESCE(fecha_fin, '9999-12-31')
+            AND
+            COALESCE(NEW.fecha_fin, '9999-12-31') >= fecha_inicio
+        )
+    ) THEN
+
+        RAISE EXCEPTION
+        'El asambleista ya tiene un nombramiento en ese rango de fechas';
+
+    END IF;
+
+    RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_validar_traslape
+BEFORE INSERT ON nombramiento
+FOR EACH ROW
+EXECUTE FUNCTION validar_traslape_nombramientos();
+
 INSERT INTO asambleista (
     cedula,
     nombre,
@@ -34,4 +65,28 @@ VALUES (
     'juan.morales@itcr.ac.cr'
 );
 
-SELECT * FROM asambleista;
+INSERT INTO nombramiento (
+    asambleista_id,
+    fecha_inicio,
+    fecha_fin,
+    estado
+)
+VALUES (
+    1,
+    '2024-01-01',
+    '2024-12-31',
+    'FINALIZADO'
+);
+
+INSERT INTO nombramiento (
+    asambleista_id,
+    fecha_inicio,
+    fecha_fin,
+    estado
+)
+VALUES (
+    1,
+    '2024-06-01',
+    '2025-01-01',
+    'ACTIVO'
+);
