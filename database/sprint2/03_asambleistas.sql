@@ -1,12 +1,23 @@
-DROP TABLE IF EXISTS nombramiento CASCADE;  --El cascade asegura que si hay dependencias, como la vista o la función, también se eliminen
+DROP TABLE IF EXISTS bitacora_asambleistas CASCADE; --El cascade asegura que "borre también dependencias relacionadas"
+DROP TABLE IF EXISTS nombramiento CASCADE;
+DROP TABLE IF EXISTS resolucion CASCADE;
 DROP TABLE IF EXISTS asambleista CASCADE;
-DROP TABLE IF EXISTS bitacora_asambleistas CASCADE;
 
 CREATE TABLE asambleista (
     asambleista_id SERIAL PRIMARY KEY,  -- Identificador único para cada asambleísta
     cedula VARCHAR(12) NOT NULL UNIQUE,  -- Cédula de identidad del asambleísta, debe ser única
     nombre VARCHAR(150) NOT NULL,  -- Nombre completo del asambleísta
     correo_institucional VARCHAR(150) NOT NULL UNIQUE -- Correo institucional del asambleísta, debe ser único
+);
+
+CREATE TABLE resolucion (
+    resolucion_id SERIAL PRIMARY KEY,
+
+    numero_resolucion VARCHAR(50) NOT NULL UNIQUE,
+
+    descripcion TEXT,
+
+    fecha_resolucion DATE NOT NULL
 );
 
 CREATE TABLE nombramiento (
@@ -18,7 +29,7 @@ CREATE TABLE nombramiento (
 
     id_puesto INTEGER NOT NULL,
 
-    -- resolucion_id INTEGER,
+    resolucion_id INTEGER NOT NULL,  --Dudas sobre si esto es necesario, pero lo agrego para tener un registro de la resolución que respalda el nombramiento, dudas ademas sobre si dejarlo como obligatorio o no, pero lo dejo obligatorio para asegurar la trazabilidad de cada nombramiento
 
     fecha_inicio DATE NOT NULL,
 
@@ -43,7 +54,11 @@ CREATE TABLE nombramiento (
 
     CONSTRAINT fk_nombramiento_puesto
         FOREIGN KEY (id_puesto)
-        REFERENCES catalogo_puestos(id_puesto)
+        REFERENCES catalogo_puestos(id_puesto),
+
+    CONSTRAINT fk_nombramiento_resolucion
+        FOREIGN KEY (resolucion_id)
+        REFERENCES resolucion(resolucion_id)
 );
 
 CREATE TABLE bitacora_asambleistas (
@@ -152,15 +167,28 @@ VALUES (
     'juan.morales@itcr.ac.cr'
 );
 
+INSERT INTO resolucion (
+    numero_resolucion,
+    descripcion,
+    fecha_resolucion
+)
+VALUES (
+    'RES-2025-001',
+    'Nombramiento oficial',
+    '2025-01-01'
+);
+
 INSERT INTO nombramiento (
     asambleista_id,
     sector_id,
+    resolucion_id,
     id_puesto,
     fecha_inicio,
     fecha_fin,
     estado
 )
 VALUES (
+    1,
     1,
     1,
     1,
