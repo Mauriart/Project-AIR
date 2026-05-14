@@ -106,4 +106,3 @@ FROM asambleista a
 JOIN nombramiento n
     ON a.asambleista_id = n.asambleista_id;
 
-SELECT * FROM vw_asambleistas_nombramientos;
