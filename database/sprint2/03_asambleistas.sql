@@ -4,10 +4,16 @@ DROP TABLE IF EXISTS resolucion CASCADE;
 DROP TABLE IF EXISTS asambleista CASCADE;
 
 CREATE TABLE asambleista (
-    asambleista_id SERIAL PRIMARY KEY,  -- Identificador único para cada asambleísta
-    cedula VARCHAR(12) NOT NULL UNIQUE,  -- Cédula de identidad del asambleísta, debe ser única
-    nombre VARCHAR(150) NOT NULL,  -- Nombre completo del asambleísta
-    correo_institucional VARCHAR(150) NOT NULL UNIQUE -- Correo institucional del asambleísta, debe ser único
+    asambleista_id SERIAL PRIMARY KEY, -- Identificador único para cada asambleísta
+
+    cedula VARCHAR(12) NOT NULL UNIQUE -- Asumimos que la cédula es un número de 8 a 12 dígitos, pero se almacena como texto para preservar ceros a la izquierda y evitar problemas de formato
+    CHECK (
+        cedula ~ '^[0-9]{8,12}$'
+    ),
+
+    nombre VARCHAR(150) NOT NULL, -- Se asume que el nombre completo no excederá los 150 caracteres, pero esto puede ajustarse según las necesidades
+
+    correo_institucional VARCHAR(150) NOT NULL UNIQUE -- Se asume que el correo institucional sigue un formato estándar y no excederá los 150 caracteres, pero esto también puede ajustarse según las necesidades
 );
 
 CREATE TABLE resolucion (
@@ -162,9 +168,20 @@ INSERT INTO asambleista (
     correo_institucional
 )
 VALUES (
-    '1-1234-5678',
+    '20890785',
     'Juan Morales',
     'juan.morales@itcr.ac.cr'
+);
+
+INSERT INTO asambleista (
+    cedula,
+    nombre,
+    correo_institucional
+)
+VALUES (
+    '30456012',
+    'María López',
+    'maria.lopez@itcr.ac.cr'
 );
 
 INSERT INTO resolucion (
