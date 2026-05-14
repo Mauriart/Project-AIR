@@ -240,3 +240,8 @@ ON asambleista(cedula);
 
 CREATE INDEX idx_nombramiento_estado
 ON nombramiento(estado);
+
+SELECT *  -- Ejemplo de consulta a la vista para verificar su funcionamiento
+FROM vw_asambleistas_nombramientos
+WHERE nombre ILIKE '%juan%'
+OR cedula ILIKE '%2089%';
