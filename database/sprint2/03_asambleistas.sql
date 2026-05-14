@@ -16,7 +16,14 @@ CREATE TABLE nombramiento (
     fecha_inicio DATE NOT NULL, -- Fecha de inicio del nombramiento
     fecha_fin DATE, -- Fecha de fin del nombramiento
 
-    estado VARCHAR(20) NOT NULL, -- Estado del nombramiento
+    estado VARCHAR(20) NOT NULL
+    CHECK (
+        estado IN (
+            'ACTIVO',
+            'FINALIZADO',
+            'SUSPENDIDO'
+    )
+),
 
     CONSTRAINT fk_nombramiento_asambleista -- Clave foránea que referencia a la tabla asambleista
         FOREIGN KEY (asambleista_id)
@@ -68,25 +75,10 @@ VALUES (
 INSERT INTO nombramiento (
     asambleista_id,
     fecha_inicio,
-    fecha_fin,
     estado
 )
 VALUES (
     1,
-    '2024-01-01',
-    '2024-12-31',
-    'FINALIZADO'
-);
-
-INSERT INTO nombramiento (
-    asambleista_id,
-    fecha_inicio,
-    fecha_fin,
-    estado
-)
-VALUES (
-    1,
-    '2024-06-01',
-    '2025-01-01',
+    '2026-01-01',
     'ACTIVO'
 );
