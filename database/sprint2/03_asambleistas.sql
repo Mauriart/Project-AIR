@@ -75,10 +75,35 @@ VALUES (
 INSERT INTO nombramiento (
     asambleista_id,
     fecha_inicio,
+    fecha_fin,
     estado
 )
 VALUES (
     1,
-    '2026-01-01',
+    '2025-01-01',
+    NULL,
     'ACTIVO'
 );
+
+CREATE OR REPLACE VIEW vw_asambleistas_nombramientos AS
+SELECT
+    a.asambleista_id,
+    a.nombre,
+    a.cedula,
+    a.correo_institucional,
+
+    n.nombramiento_id,
+    n.fecha_inicio,
+    n.fecha_fin,
+    n.estado,
+
+    CASE
+        WHEN n.fecha_fin IS NULL THEN 'VIGENTE'
+        ELSE 'INACTIVO'
+    END AS vigencia
+
+FROM asambleista a
+JOIN nombramiento n
+    ON a.asambleista_id = n.asambleista_id;
+
+SELECT * FROM vw_asambleistas_nombramientos;
