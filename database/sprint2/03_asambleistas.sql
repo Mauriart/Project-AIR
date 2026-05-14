@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS nombramiento CASCADE; 
+DROP TABLE IF EXISTS nombramiento CASCADE;  --El cascade asegura que si hay dependencias, como la vista o la función, también se eliminen
 DROP TABLE IF EXISTS asambleista CASCADE;
 DROP TABLE IF EXISTS bitacora_asambleistas CASCADE;
 
@@ -10,12 +10,19 @@ CREATE TABLE asambleista (
 );
 
 CREATE TABLE nombramiento (
-    nombramiento_id SERIAL PRIMARY KEY, -- Identificador único para cada nombramiento
+    nombramiento_id SERIAL PRIMARY KEY,
 
-    asambleista_id INTEGER NOT NULL, -- Referencia al asambleísta que recibe el nombramiento
+    asambleista_id INTEGER NOT NULL,
 
-    fecha_inicio DATE NOT NULL, -- Fecha de inicio del nombramiento
-    fecha_fin DATE, -- Fecha de fin del nombramiento
+    sector_id INTEGER NOT NULL,
+
+    id_puesto INTEGER NOT NULL,
+
+    -- resolucion_id INTEGER,
+
+    fecha_inicio DATE NOT NULL,
+
+    fecha_fin DATE,
 
     estado VARCHAR(20) NOT NULL
     CHECK (
@@ -23,12 +30,20 @@ CREATE TABLE nombramiento (
             'ACTIVO',
             'FINALIZADO',
             'SUSPENDIDO'
-    )
-),
+        )
+    ),
 
-    CONSTRAINT fk_nombramiento_asambleista -- Clave foránea que referencia a la tabla asambleista
+    CONSTRAINT fk_nombramiento_asambleista
         FOREIGN KEY (asambleista_id)
-        REFERENCES asambleista(asambleista_id)
+        REFERENCES asambleista(asambleista_id),
+
+    CONSTRAINT fk_nombramiento_sector
+        FOREIGN KEY (sector_id)
+        REFERENCES catalogo_sector(id_sector),
+
+    CONSTRAINT fk_nombramiento_puesto
+        FOREIGN KEY (id_puesto)
+        REFERENCES catalogo_puestos(id_puesto)
 );
 
 CREATE TABLE bitacora_asambleistas (
@@ -125,6 +140,7 @@ BEFORE UPDATE ON asambleista
 FOR EACH ROW
 EXECUTE FUNCTION registrar_cambio_asambleista();
 
+-- Datos de prueba para asambleísta y nombramiento
 INSERT INTO asambleista (
     cedula,
     nombre,
@@ -138,11 +154,15 @@ VALUES (
 
 INSERT INTO nombramiento (
     asambleista_id,
+    sector_id,
+    id_puesto,
     fecha_inicio,
     fecha_fin,
     estado
 )
 VALUES (
+    1,
+    1,
     1,
     '2025-01-01',
     NULL,
