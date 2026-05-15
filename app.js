@@ -27,7 +27,7 @@ app.get('/propuesta-nueva', verificarAutenticacion, (req, res) => {
 });
 
 //Ruta de buscador (Issue #3)
-app.get('/buscador', verificarAutenticacion, (req, res) => { 
+app.get('/buscador', (req, res) => { 
   res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
