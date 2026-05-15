@@ -1,6 +1,6 @@
 // Issue #3: Controlador de buscador
 
-const asambleistaModel = require('../models/asambleistaModel');
+const asambleistaModel = require('../models/AsambleistaModel');
 
 // Endpoint: búsqueda de asambleístas (por nombre o cédula)
 async function buscarAsambleistas(req, res) {
@@ -46,6 +46,7 @@ async function consultarCertificacion(req, res) {
         console.error(error);
         res.status(500).json({ error: 'Error al consultar certificación' });
     }
+    
 }
 
 module.exports = {
