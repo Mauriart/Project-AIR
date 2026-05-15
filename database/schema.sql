@@ -143,15 +143,15 @@ create table sys_log_auditoria(
 create table reglamento(
     id_reglamento serial primary key,
     nombre_normativa varchar(200) not null,
-    sigla varchar(10) unique not null,
+    sigla varchar(10) unique not null
 );
 -- tabla recursiva elemento_normativo
-create table elemnento_normativo(
+create table elemento_normativo(
     id_elemento serial primary key,
     id_reglamento int not null,
     id_elemento_padre int,
     id_nivel_reglamento int not null,
-    numero_etiqueta int not null,
+    numero_etiqueta varchar(10) not null,
     contenido_texto text,
     orden int not null,
     fecha_inicio_vigencia date not null default current_date,
@@ -162,18 +162,18 @@ create table elemnento_normativo(
         references reglamento(id_reglamento),
     constraint fk_elemento_padre
         foreign key (id_elemento_padre)
-        references elemnento_normativo(id_elemento),
+        references elemento_normativo(id_elemento),
     constraint fk_nivel_reglamento
         foreign key (id_nivel_reglamento)
-        references reglamento(id_reglamento),
+        references catalogo_nivel_reglamento(id_nivel_reglamento),
     constraint fk_estado_vigencia
         foreign key (id_estado_vigencia)
-        references estado_vigencia(id_estado_vigencia)
+        references catalogo_estado_vigencia(id_estado_vigencia)
 );
 
 -- Partial Unique Index
 create unique index idx_unicidad_vigente
-    on elemnento_normativo(id_elemento_padre, numero_etiqueta, id_reglamento)
+    on elemento_normativo(id_elemento_padre, numero_etiqueta, id_reglamento)
     where fecha_fin_vigencia is null;
 
 -- trigeer 
@@ -189,11 +189,12 @@ begin
         id_estado_vigencia = (
             select id_estado_vigencia
             from catalogo_estado_vigencia
-            where nombre = 'Historico'
+            where nombre in ('Histórico', 'Historico')
+            limit 1
         )
     where 
-        id_elemento = new.id_elemento
-        and id_elemento_padre = new.id_elemento_padre
+        id_reglamento = new.id_reglamento
+        and id_elemento_padre is not distinct from new.id_elemento_padre
         and numero_etiqueta = new.numero_etiqueta
         and fecha_fin_vigencia is null;
     return new;
@@ -273,8 +274,8 @@ create table punto_agenda(
     references propuesta(id_propuesta)
 );
 
-create table resolucion(
-  id_resolucion SERIAL PRIMARY KEY,
+create table resolucion_propuesta(
+  id_resolucion_propuesta SERIAL PRIMARY KEY,
   id_punto_agenda int not null,
   numero_resolucion varchar(20) not null,
   fecha_emision date not null,

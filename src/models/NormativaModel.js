@@ -96,7 +96,7 @@ async function obtenerPropuestas() {
     FROM propuesta p
     JOIN catalogo_etapas_propuestas ep 
       ON p.id_etapa_propuesta = ep.id_etapa_propuesta
-    JOIN catalogo_estado_propuestas esp 
+    JOIN catalogo_estado_propuesta esp
       ON p.id_estado_propuesta = esp.id_estado_propuesta
     LEFT JOIN reglamento r 
       ON p.id_reglamento_base = r.id_reglamento
