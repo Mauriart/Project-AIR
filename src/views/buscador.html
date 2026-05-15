@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscador de Asambleístas - AIR</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: bold; margin-bottom: 0.5rem; }
+        input, button { padding: 0.5rem; font-size: 1rem; }
+        input[type="text"] { width: 100%; }
+        .fecha-group { display: flex; gap: 1rem; align-items: center; }
+        .resultado { margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 1rem; }
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+        .badge.vigente { background-color: #4CAF50; color: white; }
+        .badge.inactivo { background-color: #f44336; color: white; }
+        #sugerencias div { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+        #sugerencias div:hover { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Certificaciones AIR</h1>
+    <h2>Buscador de Asambleísta</h2>
+
+    <div class="form-group">
+        <label for="buscador">Asambleísta (nombre o cédula):</label>
+        <input type="text" id="buscador" placeholder="Escriba al menos 2 caracteres..." autocomplete="off">
+        <div id="sugerencias" style="border:1px solid #ccc; max-height:150px; overflow-y:auto; display:none;"></div>
+    </div>
+
+    <div class="form-group">
+        <label>Periodo de consulta:</label>
+        <div class="fecha-group">
+            <input type="checkbox" id="todoHistorial" checked> <label for="todoHistorial">Todo el historial</label>
+        </div>
+        <div id="rangoFechas" style="display:none; margin-top:0.5rem;">
+            <input type="date" id="fechaDesde"> hasta <input type="date" id="fechaHasta">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <button id="consultarBtn">Consultar</button>
+    </div>
+
+    <div id="infoAsambleista" class="resultado" style="display:none;">
+        <h3>Información del asambleísta</h3>
+        <p><strong>Nombre:</strong> <span id="infoNombre"></span></p>
+        <p><strong>Cédula:</strong> <span id="infoCedula"></span></p>
+        <p><strong>Sector actual:</strong> <span id="infoSector"></span> <span id="infoVigencia" class="badge"></span></p>
+    </div>
+
+    <div id="resultadoConsulta" class="resultado" style="display:none;">
+        <h3>Resultados de la consulta</h3>
+        <pre id="detalleConsulta" style="background:#f4f4f4; padding:1rem; border-radius:4px;"></pre>
+    </div>
+
+    <script>
+        let asambleistaSeleccionado = null;
+
+        async function buscarAsambleistas(termino) {
+            const res = await fetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
+            if (!res.ok) return [];
+            return res.json();
+        }
+
+        async function obtenerAsambleistaPorId(id) {
+            const res = await fetch(`/api/asambleistas/${id}`);
+            if (!res.ok) return null;
+            return res.json();
+        }
+
+        const inputBuscar = document.getElementById('buscador');
+        const sugerenciasDiv = document.getElementById('sugerencias');
+
+        inputBuscar.addEventListener('input', async function() {
+            const texto = this.value.trim();
+            if (texto.length < 2) {
+                sugerenciasDiv.style.display = 'none';
+                return;
+            }
+            const resultados = await buscarAsambleistas(texto);
+            if (resultados.length === 0) {
+                sugerenciasDiv.style.display = 'none';
+                return;
+            }
+            sugerenciasDiv.innerHTML = resultados.map(a => `<div data-id="${a.id}">${a.nombre} (${a.cedula})</div>`).join('');
+            sugerenciasDiv.style.display = 'block';
+
+            document.querySelectorAll('#sugerencias div').forEach(div => {
+                div.addEventListener('click', async () => {
+                    const id = parseInt(div.dataset.id);
+                    asambleistaSeleccionado = await obtenerAsambleistaPorId(id);
+                    inputBuscar.value = `${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})`;
+                    sugerenciasDiv.style.display = 'none';
+                    mostrarInfo(asambleistaSeleccionado);
+                });
+            });
+        });
+
+        function mostrarInfo(asam) {
+            document.getElementById('infoNombre').innerText = asam.nombre;
+            document.getElementById('infoCedula').innerText = asam.cedula;
+            document.getElementById('infoSector').innerText = asam.sector;
+            const vigenciaSpan = document.getElementById('infoVigencia');
+            if (asam.vigente) {
+                vigenciaSpan.innerText = 'VIGENTE';
+                vigenciaSpan.className = 'badge vigente';
+            } else {
+                vigenciaSpan.innerText = 'INACTIVO';
+                vigenciaSpan.className = 'badge inactivo';
+            }
+            document.getElementById('infoAsambleista').style.display = 'block';
+        }
+
+        const chkTodo = document.getElementById('todoHistorial');
+        const rangoDiv = document.getElementById('rangoFechas');
+        chkTodo.addEventListener('change', () => {
+            rangoDiv.style.display = chkTodo.checked ? 'none' : 'flex';
+        });
+
+        document.getElementById('consultarBtn').addEventListener('click', async () => {
+            if (!asambleistaSeleccionado) {
+                alert('Seleccione un asambleísta');
+                return;
+            }
+            let fechaDesde = null, fechaHasta = null;
+            if (!chkTodo.checked) {
+                fechaDesde = document.getElementById('fechaDesde').value;
+                fechaHasta = document.getElementById('fechaHasta').value;
+                if (!fechaDesde || !fechaHasta) {
+                    alert('Especifique ambas fechas o marque todo el historial');
+                    return;
+                }
+            }
+            const payload = { idAsambleista: asambleistaSeleccionado.id, fechaDesde, fechaHasta };
+            const res = await fetch('/api/asambleistas/consultar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('detalleConsulta').innerText = JSON.stringify(data, null, 2);
+                document.getElementById('resultadoConsulta').style.display = 'block';
+            } else {
+                alert('Error al consultar');
+            }
+        });
+    </script>
+</body>
+</html>
