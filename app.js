@@ -14,14 +14,21 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./src/controllers/AuthController');
 const { verificarAutenticacion } = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
+const buscadorRoutes = require('./src/controllers/BuscadorRoutes');
 
 // Registrar rutas
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
+app.use('/api/asambleistas', buscadorRoutes);
 
 // Rutas de vistas
 app.get('/propuesta-nueva', verificarAutenticacion, (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/propuesta-nueva.view.html'));
+});
+
+//Ruta de buscador (Issue #3)
+app.get('/buscador', verificarAutenticacion, (req, res) => { 
+  res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
 // Ruta de prueba
@@ -32,3 +39,5 @@ app.get('/test-protegido', verificarAutenticacion, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor AIR corriendo en http://localhost:${PORT}`);
 });
+
+
