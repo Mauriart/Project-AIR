@@ -1,6 +1,6 @@
 -- Este archivo es el esquema de la base de datos
 -- Los scripts por sprint se encuentran en la carpeta database/sprint#
-
+ 
 -- Tabla de Catalogos
 -- Catalogos a los que se hace referencia en la base de datos
 CREATE TABLE catalogo_sector (
