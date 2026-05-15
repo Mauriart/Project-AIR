@@ -91,6 +91,30 @@ BEFORE DELETE ON certificacion_emitida
 FOR EACH ROW
 EXECUTE FUNCTION tg_no_reapertura_certificacion();
 
+CREATE OR REPLACE FUNCTION fn_preview_siguiente_folio()
+RETURNS VARCHAR AS $$
+DECLARE
+    v_anio INTEGER;
+    v_numero INTEGER;
+BEGIN
+    v_anio := EXTRACT(YEAR FROM CURRENT_DATE);
+
+    SELECT COALESCE(ultimo_numero, 0) + 1
+    INTO v_numero
+    FROM control_folio
+    WHERE anio = v_anio;
+
+    IF v_numero IS NULL THEN
+        v_numero := 1;
+    END IF;
+
+    RETURN 'DAIR-' ||
+           LPAD(v_numero::TEXT, 3, '0') ||
+           '-' ||
+           v_anio;
+END;
+$$ LANGUAGE plpgsql;
+
 create table reglamento(
     id_reglamento serial primary key,
     nombre_normativa varchar(200) not null,
