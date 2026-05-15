@@ -31,3 +31,9 @@ INSERT INTO catalogo_estado_vigencia (nombre) VALUES
 INSERT INTO catalogo_nivel_reglamento (nombre) VALUES
   ('Título'), ('Capítulo'), ('Artículo'),
   ('Inciso'), ('Sub-inciso');
+
+  INSERT INTO catalogo_puestos (nombre_puesto) VALUES
+  ('Presidente'),
+  ('Vicepresidente'),
+  ('Secretario'),
+  ('Vocal');
