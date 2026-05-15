@@ -1,5 +1,96 @@
--- Issue #10
+-- Issue #10 y #1
 -- Seccion 1: Tablas de Normativa
+DROP TABLE IF EXISTS certificacion_emitida CASCADE;
+DROP TABLE IF EXISTS control_folio CASCADE;
+
+CREATE TABLE control_folio (
+    id_control SERIAL PRIMARY KEY,
+
+    anio INTEGER NOT NULL UNIQUE,
+
+    ultimo_numero INTEGER NOT NULL DEFAULT 0,
+
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE certificacion_emitida (
+    id_certificacion SERIAL PRIMARY KEY,
+
+    folio VARCHAR(20) NOT NULL UNIQUE,
+
+    nombre_solicitante VARCHAR(150) NOT NULL,
+
+    fecha_emision TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION fn_generar_folio() -- Función para generar un folio único para cada certificación emitida 
+RETURNS VARCHAR AS $$
+DECLARE
+    v_anio INTEGER;
+    v_numero INTEGER;
+    v_folio VARCHAR(20);
+BEGIN
+    v_anio := EXTRACT(YEAR FROM CURRENT_DATE);
+
+    INSERT INTO control_folio (anio, ultimo_numero)
+    VALUES (v_anio, 0)
+    ON CONFLICT (anio) DO NOTHING;
+
+    SELECT ultimo_numero
+    INTO v_numero
+    FROM control_folio
+    WHERE anio = v_anio
+    FOR UPDATE;-- Bloquea la fila para evitar condiciones de carrera
+
+    v_numero := v_numero + 1;
+
+    UPDATE control_folio
+    SET
+        ultimo_numero = v_numero,
+        fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE anio = v_anio;
+
+    v_folio := 'DAIR-' ||
+               LPAD(v_numero::TEXT, 3, '0') ||
+               '-' ||
+               v_anio;
+
+    RETURN v_folio;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tg_folio_secuencial()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.folio := fn_generar_folio(); -- Asigna el folio generado al nuevo registro de certificación emitida
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_folio_secuencial --Trigger para asignar un folio secuencial único cada vez que se inserta una nueva certificación emitida
+BEFORE INSERT ON certificacion_emitida
+FOR EACH ROW --Para cada fila que se inserta, se ejecuta la función tg_folio_secuencial
+EXECUTE FUNCTION tg_folio_secuencial();
+
+CREATE OR REPLACE FUNCTION tg_no_reapertura_certificacion()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION
+    'Las certificaciones emitidas no pueden modificarse ni eliminarse';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_no_update_certificacion
+BEFORE UPDATE ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION tg_no_reapertura_certificacion();
+
+CREATE TRIGGER tg_no_delete_certificacion
+BEFORE DELETE ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION tg_no_reapertura_certificacion();
+
 create table reglamento(
     id_reglamento serial primary key,
     nombre_normativa varchar(200) not null,
