@@ -259,3 +259,9 @@ create table resolucion_propuesta(
     foreign key (id_punto_agenda)
     references punto_agenda(id_punto_agenda)
 );
+
+CREATE INDEX idx_certificacion_folio
+ON certificacion_emitida(folio);
+
+CREATE INDEX idx_control_folio_anio
+ON control_folio(anio);
