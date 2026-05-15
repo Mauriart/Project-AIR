@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIR — Nueva Propuesta</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    label .required {
+      color: #e53e3e;
+      margin-left: 3px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color .2s;
+      outline: none;
+      background: white;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #534AB7;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 24px 0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .2s;
+    }
+
+    .btn-secondary {
+      background: white;
+      border-color: #ddd;
+      color: #555;
+    }
+
+    .btn-secondary:hover { background: #f5f5f5; }
+
+    .btn-primary {
+      background: #534AB7;
+      color: white;
+    }
+
+    .btn-primary:hover { background: #3C3489; }
+    .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+    .alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .alert-error {
+      background: #FCEBEB;
+      border: 1px solid #f5c6c6;
+      color: #791F1F;
+    }
+
+    .alert-success {
+      background: #E1F5EE;
+      border: 1px solid #5DCAA5;
+      color: #085041;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .badge-optional {
+      background: #f0f0f0;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="page-header">
+    <h1>Nueva Propuesta / Moción</h1>
+    <p>Sistema AIR — Asamblea Institucional Representativa · TEC</p>
+  </div>
+
+  <div class="card">
+
+    <div id="alertMsg" class="alert"></div>
+
+    <!-- SECCIÓN 1: Datos básicos -->
+    <div class="section-title">Datos de la propuesta</div>
+
+    <div class="form-group">
+      <label for="titulo">Título de la propuesta <span class="required">*</span></label>
+      <input type="text" id="titulo" placeholder="Ej: Reforma al Artículo 18 del Estatuto Orgánico">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="codigo_air">Código AIR <span class="badge badge-optional">Opcional</span></label>
+        <input type="text" id="codigo_air" placeholder="Ej: AIR-001-2026">
+      </div>
+      <div class="form-group">
+        <label for="id_reglamento_base">Reglamento base <span class="badge badge-optional">Opcional</span></label>
+        <select id="id_reglamento_base">
+          <option value="">— Seleccioná un reglamento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECCIÓN 2: Clasificación -->
+    <div class="section-title">Clasificación</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="id_etapa_propuesta">Etapa <span class="required">*</span></label>
+        <select id="id_etapa_propuesta">
+          <option value="">— Seleccioná —</option>
+          <option value="1">Procedencia</option>
+          <option value="2">Aprobación</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_tipo_mayoria_requerida">Tipo de mayoría <span class="required">*</span></label>
+        <select id="id_tipo_mayoria_requerida">
+          <option value="">— Seleccioná —</option>
+          <option value="1">Simple</option>
+          <option value="2">Calificada (66%)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="id_sesion">Sesión donde se discute <span class="required">*</span></label>
+        <select id="id_sesion">
+          <option value="">— Seleccioná una sesión —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_propuesta_padre">Propuesta base <span class="badge badge-optional">Solo si es conciliada</span></label>
+        <select id="id_propuesta_padre">
+          <option value="">— No aplica —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECCIÓN 3: Contenido -->
+    <div class="section-title">Contenido</div>
+
+    <div class="form-group">
+      <label for="texto_sustitutivo">Texto sustitutivo <span class="badge badge-optional">Opcional</span></label>
+      <textarea id="texto_sustitutivo" placeholder="Redactá aquí el texto que reemplazaría al artículo actual..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="limpiarFormulario()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarPropuesta()">Guardar propuesta</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // =============================================
+  // RESPONSABILIDAD DE LA VISTA:
+  // - Cargar datos de los selectores via fetch
+  // - Capturar datos del formulario
+  // - Llamar al controlador via fetch
+  // - Mostrar resultado
+  // Sin lógica de negocio aquí.
+  // =============================================
+
+  const TOKEN = localStorage.getItem('token');
+
+  // Al cargar la página, llena los selectores dinámicamente
+  document.addEventListener('DOMContentLoaded', async () => {
+    await cargarReglamentos();
+    await cargarSesiones();
+    await cargarPropuestas();
+  });
+
+  // Llena el selector de reglamentos desde el controlador
+  async function cargarReglamentos() {
+    try {
+      const res = await fetch('/normativa/reglamentos', {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      const select = document.getElementById('id_reglamento_base');
+
+      datos.data.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id_reglamento;
+        opt.textContent = `${r.sigla} — ${r.nombre_normativa}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Error cargando reglamentos:', e);
+    }
+  }
+
+  // Llena el selector de sesiones desde el controlador
+  async function cargarSesiones() {
+    try {
+      const res = await fetch('/normativa/sesiones', {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      const select = document.getElementById('id_sesion');
+
+      if (datos.data.length === 0) {
+        select.innerHTML = '<option value="">— No hay sesiones registradas —</option>';
+        return;
+      }
+
+      datos.data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id_sesion;
+        opt.textContent = `${s.numero_sesion} · ${s.tipo_sesion} · ${s.fecha}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Error cargando sesiones:', e);
+    }
+  }
+
+  // Llena el selector de propuestas base (para conciliadas)
+  async function cargarPropuestas() {
+    try {
+      const res = await fetch('/normativa/propuestas', {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      const select = document.getElementById('id_propuesta_padre');
+
+      datos.data.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id_propuesta;
+        opt.textContent = `${p.codigo_air || 'Sin código'} — ${p.titulo}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Error cargando propuestas:', e);
+    }
+  }
+
+  // Envía el formulario al controlador
+  async function guardarPropuesta() {
+    const titulo                  = document.getElementById('titulo').value.trim();
+    const codigo_air              = document.getElementById('codigo_air').value.trim();
+    const id_reglamento_base      = document.getElementById('id_reglamento_base').value;
+    const id_etapa_propuesta      = document.getElementById('id_etapa_propuesta').value;
+    const id_tipo_mayoria         = document.getElementById('id_tipo_mayoria_requerida').value;
+    const id_propuesta_padre      = document.getElementById('id_propuesta_padre').value;
+    const texto_sustitutivo       = document.getElementById('texto_sustitutivo').value.trim();
+
+    // Validación mínima — solo campos obligatorios
+    if (!titulo || !id_etapa_propuesta || !id_tipo_mayoria) {
+      mostrarAlerta('error', 'Completá los campos obligatorios: título, etapa y tipo de mayoría.');
+      return;
+    }
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled    = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch('/normativa/propuestas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${TOKEN}`
+        },
+        body: JSON.stringify({
+          titulo,
+          codigo_air:               codigo_air || null,
+          id_reglamento_base:       id_reglamento_base || null,
+          id_etapa_propuesta:       parseInt(id_etapa_propuesta),
+          id_estado_propuesta:      1, // Pendiente de Revisión por defecto
+          id_tipo_mayoria_requerida: parseInt(id_tipo_mayoria),
+          id_propuesta_padre:       id_propuesta_padre || null,
+          texto_sustitutivo:        texto_sustitutivo || null
+        })
+      });
+
+      const datos = await res.json();
+
+      if (datos.ok) {
+        mostrarAlerta('success', `Propuesta guardada correctamente. ID asignado: ${datos.data.id_propuesta}`);
+        limpiarFormulario();
+        await cargarPropuestas(); // actualiza el selector de propuestas base
+      } else {
+        mostrarAlerta('error', datos.mensaje);
+      }
+
+    } catch (e) {
+      mostrarAlerta('error', 'Error de conexión. Intentá de nuevo.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Guardar propuesta';
+    }
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('titulo').value           = '';
+    document.getElementById('codigo_air').value       = '';
+    document.getElementById('texto_sustitutivo').value = '';
+    document.getElementById('id_reglamento_base').value = '';
+    document.getElementById('id_etapa_propuesta').value = '';
+    document.getElementById('id_tipo_mayoria_requerida').value = '';
+    document.getElementById('id_propuesta_padre').value = '';
+    document.getElementById('id_sesion').value        = '';
+    ocultarAlerta();
+  }
+
+  function mostrarAlerta(tipo, mensaje) {
+    const el = document.getElementById('alertMsg');
+    el.className    = `alert alert-${tipo}`;
+    el.textContent  = mensaje;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function ocultarAlerta() {
+    const el = document.getElementById('alertMsg');
+    el.style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
