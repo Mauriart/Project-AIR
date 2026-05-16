@@ -505,3 +505,31 @@ INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
 INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
   (3, 3);
 
+-- Usuarios semilla para desarrollo
+-- Passwords:
+--   secretaria_air / Secretaria123!
+--   asistente_air  / Asistente123!
+--   consulta_air   / Consulta123!
+INSERT INTO sys_usuario (username, password_hash, email, activo) VALUES
+  ('secretaria_air', '$2a$10$w93zeCrstec67Urj7XI1T.M0/UltR2XDX.hm3BgHcpd5/XQnUF3hy', 'secretaria.air@itcr.ac.cr', TRUE),
+  ('asistente_air', '$2a$10$lm4eW/zBANZ6mkoyBrg93eaI2E6K0nzgpVvzb13WpLXJmTMWf9RAy', 'asistente.air@itcr.ac.cr', TRUE),
+  ('consulta_air', '$2a$10$YbdmWds9qmrnZZ5nmAtbZOYOFDlGN3J8objYgCX10jNd7nZN1v.lK', 'consulta.air@itcr.ac.cr', TRUE);
+
+INSERT INTO sys_usuario_rol (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM sys_usuario u
+JOIN sys_rol r ON r.nombre_rol = 'SECRETARIA'
+WHERE u.username = 'secretaria_air';
+
+INSERT INTO sys_usuario_rol (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM sys_usuario u
+JOIN sys_rol r ON r.nombre_rol = 'ASISTENTE'
+WHERE u.username = 'asistente_air';
+
+INSERT INTO sys_usuario_rol (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM sys_usuario u
+JOIN sys_rol r ON r.nombre_rol = 'CONSULTA'
+WHERE u.username = 'consulta_air';
+
