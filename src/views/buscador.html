@@ -119,33 +119,29 @@
         });
 
         document.getElementById('consultarBtn').addEventListener('click', async () => {
-            if (!asambleistaSeleccionado) {
-                alert('Seleccione un asambleísta');
-                return;
-            }
-            let fechaDesde = null, fechaHasta = null;
-            if (!chkTodo.checked) {
-                fechaDesde = document.getElementById('fechaDesde').value;
-                fechaHasta = document.getElementById('fechaHasta').value;
-                if (!fechaDesde || !fechaHasta) {
-                    alert('Especifique ambas fechas o marque todo el historial');
-                    return;
-                }
-            }
-            const payload = { idAsambleista: asambleistaSeleccionado.id, fechaDesde, fechaHasta };
-            const res = await fetch('/api/asambleistas/consultar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                const data = await res.json();
-                document.getElementById('detalleConsulta').innerText = JSON.stringify(data, null, 2);
-                document.getElementById('resultadoConsulta').style.display = 'block';
-            } else {
-                alert('Error al consultar');
-            }
-        });
+    if (!asambleistaSeleccionado) {
+        alert('Por favor seleccione un asambleísta de la lista.');
+        return;
+    }
+
+    let periodo = '';
+    if (chkTodo.checked) {
+        periodo = 'Todo el historial';
+    } else {
+        const desde = document.getElementById('fechaDesde').value;
+        const hasta = document.getElementById('fechaHasta').value;
+        if (!desde || !hasta) {
+            alert('Debe especificar ambas fechas o marcar "Todo el historial".');
+            return;
+        }
+        periodo = `${desde} al ${hasta}`;
+    }
+
+    const mensaje = ` Consulta simulada para: ${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})\n Periodo: ${periodo}\n\n La certificación se generará para el sprint 3.`;
+    
+    document.getElementById('detalleConsulta').innerText = mensaje;
+    document.getElementById('resultadoConsulta').style.display = 'block';
+});
     </script>
 </body>
 </html>
