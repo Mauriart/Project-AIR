@@ -15,11 +15,13 @@ const authRoutes = require('./src/controllers/AuthController');
 const { verificarAutenticacion } = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
 const buscadorRoutes = require('./src/controllers/BuscadorRoutes');
+const certificacionRoutes = require('./src/controllers/CertificacionController');
 
 // Registrar rutas
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
 app.use('/api/asambleistas', buscadorRoutes);
+app.use('/api/certificaciones', certificacionRoutes);
 
 // Rutas de vistas
 app.get('/propuesta-nueva', verificarAutenticacion, (req, res) => {
