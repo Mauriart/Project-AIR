@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Preview Certificación</title>
+</head>
+<body>
+
+    <h1>Generar Certificación</h1>
+
+    <button id="btnPreview">
+        Mostrar próximo folio
+    </button>
+
+    <p id="resultado"></p>
+
+    <script>
+
+        const boton = document.getElementById('btnPreview');
+        const resultado = document.getElementById('resultado');
+
+        boton.addEventListener('click', async () => {
+
+            try {
+
+                const response = await fetch(
+                    '/api/certificaciones/preview-folio'
+                );
+
+                const data = await response.json();
+
+                resultado.textContent =
+                    `Próximo folio: ${data.folio}`;
+
+            } catch (error) {
+
+                console.error(error);
+
+                resultado.textContent =
+                    'Error obteniendo folio';
+            }
+        });
+
+    </script>
+
+</body>
+</html>
