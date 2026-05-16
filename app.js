@@ -33,10 +33,21 @@ app.get('/buscador', verificarAutenticacion, (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
+//Ruta de buscador de isssue #1
+app.get('/preview-certificacion', (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      'src/views/certificacion-preview.html'
+    )
+  );
+});
+
 // Ruta de prueba
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {
   res.json({ ok: true, mensaje: `Hola ${req.usuario.username}` });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Servidor AIR corriendo en http://localhost:${PORT}`);
