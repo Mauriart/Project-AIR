@@ -15,7 +15,7 @@ const { verificarAutenticacion } = require('./src/controllers/AuthController');
 const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
-const buscadorController = require('./src/controllers/buscadorController');
+const asambleistaController = require('./src/controllers/asambleistaController');
 
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
@@ -23,21 +23,21 @@ app.use('/normativa', normativaRoutes);
 app.use('/api/certificaciones', certificacionRoutes);
 
 // Rutas buscador
-app.get('/api/asambleistas/buscar', buscadorController.buscarAsambleistas);
-app.get('/api/asambleistas/:id', buscadorController.obtenerAsambleistaPorId);
-app.post('/api/asambleistas/consultar', buscadorController.consultarCertificacion);
+app.get('/api/asambleistas/buscar', asambleistaController.buscarAsambleistas);
+app.get('/api/asambleistas/:id', asambleistaController.obtenerAsambleistaPorId);
+app.post('/api/asambleistas/consultar', asambleistaController.consultarCertificacion);
 
 // Rutas asableistas
-app.get('/api/asambleistas', buscadorController.listarAsambleistas);
-app.post('/api/asambleistas', buscadorController.crearAsambleista);
-app.put('/api/asambleistas/:id', buscadorController.actualizarAsambleista);
-app.delete('/api/asambleistas/:id', buscadorController.eliminarAsambleista);
+app.get('/api/asambleistas', asambleistaController.listarAsambleistas);
+app.post('/api/asambleistas', asambleistaController.crearAsambleista);
+app.put('/api/asambleistas/:id', asambleistaController.actualizarAsambleista);
+app.delete('/api/asambleistas/:id', asambleistaController.eliminarAsambleista);
 
 // Rutas nombramientos
-app.get('/api/asambleistas/:id/nombramientos', buscadorController.listarNombramientos);
-app.post('/api/asambleistas/:id/nombramientos', buscadorController.crearNombramiento);
-app.put('/api/nombramientos/:id', buscadorController.actualizarNombramiento);
-app.delete('/api/nombramientos/:id', buscadorController.eliminarNombramiento);
+app.get('/api/asambleistas/:id/nombramientos', asambleistaController.listarNombramientos);
+app.post('/api/asambleistas/:id/nombramientos', asambleistaController.crearNombramiento);
+app.put('/api/nombramientos/:id', asambleistaController.actualizarNombramiento);
+app.delete('/api/nombramientos/:id', asambleistaController.eliminarNombramiento);
 
 // Rutas vistas
 app.get('/buscador', (req, res) => {
