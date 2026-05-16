@@ -163,9 +163,9 @@ Define los roles disponibles en el sistema.
 | nombre_rol | VARCHAR(50) | UNIQUE, NOT NULL | Nombre del rol |
 
 **Roles del sistema:**
-- `SECRETARIA` — autoridad máxima, emite certificaciones y cierra actas
-- `ASISTENTE` — carga datos y prepara borradores
-- `CONSULTA` — solo lectura del compilador de reglamentos
+- `Administrador` - autoridad maxima, administra usuarios, emite certificaciones y gestiona asambleistas
+- `Secretaría` - carga datos, prepara borradores y gestiona asambleistas
+- `Asambleísta` - solo lectura del compilador de reglamentos
 
 ---
 

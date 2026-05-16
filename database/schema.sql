@@ -483,9 +483,9 @@ ON nombramiento(estado);
 -- *****************
 
 INSERT INTO sys_rol (nombre_rol) VALUES
-  ('SECRETARIA'),
-  ('ASISTENTE'),
-  ('CONSULTA');
+  ('Administrador'),
+  ('Secretaría'),
+  ('Asambleísta');
 
 INSERT INTO sys_permiso (nombre_permiso, description) VALUES
   ('EMITIR_CERTIFICACION', 'Permite emitir certificaciones legales'),
@@ -493,43 +493,59 @@ INSERT INTO sys_permiso (nombre_permiso, description) VALUES
   ('VER_REGLAMENTOS', 'Permite consultar el compilador normativo');
 
 -- Asignar permisos por rol
--- SECRETARIA tiene todos los permisos
-INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
-  (1, 1), (1, 2), (1, 3);
+-- Administrador tiene todos los permisos
+INSERT INTO sys_rol_permiso (id_rol, id_permiso)
+SELECT r.id_rol, p.id_permiso
+FROM sys_rol r
+JOIN sys_permiso p ON p.nombre_permiso IN (
+  'EMITIR_CERTIFICACION',
+  'GESTIONAR_ASAMBLEISTAS',
+  'VER_REGLAMENTOS'
+)
+WHERE r.nombre_rol = 'Administrador';
 
--- ASISTENTE puede gestionar y ver
-INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
-  (2, 2), (2, 3);
+-- Secretaría puede gestionar y ver
+INSERT INTO sys_rol_permiso (id_rol, id_permiso)
+SELECT r.id_rol, p.id_permiso
+FROM sys_rol r
+JOIN sys_permiso p ON p.nombre_permiso IN (
+  'GESTIONAR_ASAMBLEISTAS',
+  'VER_REGLAMENTOS'
+)
+WHERE r.nombre_rol = 'Secretaría';
 
--- CONSULTA solo puede ver
-INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
-  (3, 3);
+-- Asambleísta solo puede ver
+INSERT INTO sys_rol_permiso (id_rol, id_permiso)
+SELECT r.id_rol, p.id_permiso
+FROM sys_rol r
+JOIN sys_permiso p ON p.nombre_permiso = 'VER_REGLAMENTOS'
+WHERE r.nombre_rol = 'Asambleísta';
 
 -- Usuarios semilla para desarrollo
 -- Passwords:
+--   admin_air      / Admin123!
 --   secretaria_air / Secretaria123!
---   asistente_air  / Asistente123!
---   consulta_air   / Consulta123!
+--   asambleista_air / Asambleista123!
 INSERT INTO sys_usuario (username, password_hash, email, activo) VALUES
-  ('secretaria_air', '$2a$10$w93zeCrstec67Urj7XI1T.M0/UltR2XDX.hm3BgHcpd5/XQnUF3hy', 'secretaria.air@itcr.ac.cr', TRUE),
-  ('asistente_air', '$2a$10$lm4eW/zBANZ6mkoyBrg93eaI2E6K0nzgpVvzb13WpLXJmTMWf9RAy', 'asistente.air@itcr.ac.cr', TRUE),
-  ('consulta_air', '$2a$10$YbdmWds9qmrnZZ5nmAtbZOYOFDlGN3J8objYgCX10jNd7nZN1v.lK', 'consulta.air@itcr.ac.cr', TRUE);
+  ('admin_air', '$2a$10$U/8IDGSXk/PqQ1gDyU1l9.yxRUMe9kUHzpanv9QdxBC6QakBfTjOu', 'admin.air@itcr.ac.cr', TRUE),
+  ('secretaria_air', '$2a$10$PzyKXDI5Z0IqspKN5U3w8O1380Dq6/G6yIbpR7Sh/dQ97IZMkU3u2', 'secretaria.air@itcr.ac.cr', TRUE),
+  ('asambleista_air', '$2a$10$02VtH2YsSzjN7ENNM57B1eS9TwfKT//7/m3ys63saFcbCmLUmRBGu', 'asambleista.air@itcr.ac.cr', TRUE);
 
 INSERT INTO sys_usuario_rol (id_usuario, id_rol)
 SELECT u.id_usuario, r.id_rol
 FROM sys_usuario u
-JOIN sys_rol r ON r.nombre_rol = 'SECRETARIA'
+JOIN sys_rol r ON r.nombre_rol = 'Administrador'
+WHERE u.username = 'admin_air';
+
+INSERT INTO sys_usuario_rol (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM sys_usuario u
+JOIN sys_rol r ON r.nombre_rol = 'Secretaría'
 WHERE u.username = 'secretaria_air';
 
 INSERT INTO sys_usuario_rol (id_usuario, id_rol)
 SELECT u.id_usuario, r.id_rol
 FROM sys_usuario u
-JOIN sys_rol r ON r.nombre_rol = 'ASISTENTE'
-WHERE u.username = 'asistente_air';
-
-INSERT INTO sys_usuario_rol (id_usuario, id_rol)
-SELECT u.id_usuario, r.id_rol
-FROM sys_usuario u
-JOIN sys_rol r ON r.nombre_rol = 'CONSULTA'
-WHERE u.username = 'consulta_air';
+JOIN sys_rol r ON r.nombre_rol = 'Asambleísta'
+WHERE u.username = 'asambleista_air';
 
