@@ -286,10 +286,6 @@ create table resolucion_propuesta(
 );
 
 -- elementos del sprint 2 (03_asambleistas.sql)
-DROP TABLE IF EXISTS bitacora_asambleistas CASCADE; --El cascade asegura que "borre también dependencias relacionadas"
-DROP TABLE IF EXISTS nombramiento CASCADE;
-DROP TABLE IF EXISTS resolucion CASCADE;
-DROP TABLE IF EXISTS asambleista CASCADE;
 
 CREATE TABLE asambleista (
     asambleista_id SERIAL PRIMARY KEY, -- Identificador único para cada asambleísta
@@ -448,59 +444,6 @@ CREATE TRIGGER trigger_bitacora_asambleistas
 BEFORE UPDATE ON asambleista
 FOR EACH ROW
 EXECUTE FUNCTION registrar_cambio_asambleista();
-
--- Datos de prueba para asambleísta y nombramiento
-INSERT INTO asambleista (
-    cedula,
-    nombre,
-    correo_institucional
-)
-VALUES (
-    '20890785',
-    'Juan Morales',
-    'juan.morales@itcr.ac.cr'
-);
-
-INSERT INTO asambleista (
-    cedula,
-    nombre,
-    correo_institucional
-)
-VALUES (
-    '30456012',
-    'María López',
-    'maria.lopez@itcr.ac.cr'
-);
-
-INSERT INTO resolucion (
-    numero_resolucion,
-    descripcion,
-    fecha_resolucion
-)
-VALUES (
-    'RES-2025-001',
-    'Nombramiento oficial',
-    '2025-01-01'
-);
-
-INSERT INTO nombramiento (
-    asambleista_id,
-    sector_id,
-    resolucion_id,
-    id_puesto,
-    fecha_inicio,
-    fecha_fin,
-    estado
-)
-VALUES (
-    1,
-    1,
-    1,
-    1,
-    '2025-01-01',
-    NULL,
-    'ACTIVO'
-);
 
 CREATE OR REPLACE VIEW vw_asambleistas_nombramientos AS
 SELECT
