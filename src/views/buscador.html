@@ -306,7 +306,7 @@
             }
             periodo = `${desde} al ${hasta}`;
         }
-        const mensaje = `🔍 Consulta simulada para: ${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})\n📅 Periodo: ${periodo}\n\n✅ La certificación se generará en la versión final del sistema.`;
+        const mensaje = `Consulta para: ${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})\n Periodo: ${periodo}\n\n La certificación se generará para el sprint 3.`;
         document.getElementById('detalleConsulta').innerText = mensaje;
         document.getElementById('resultadoConsulta').style.display = 'block';
     });
