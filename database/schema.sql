@@ -165,10 +165,12 @@ create table elemento_normativo(
         references elemento_normativo(id_elemento),
     constraint fk_nivel_reglamento
         foreign key (id_nivel_reglamento)
-        references catalogo_nivel_reglamento(id_nivel_reglamento),
+        references catalogo_nivel_reglamento(id_nivel_reglamento)
+        on delete restrict,
     constraint fk_estado_vigencia
         foreign key (id_estado_vigencia)
         references catalogo_estado_vigencia(id_estado_vigencia)
+        on delete restrict
 );
 
 -- Partial Unique Index
@@ -324,7 +326,7 @@ CREATE TABLE nombramiento (
     fecha_inicio DATE NOT NULL,
 
     fecha_fin DATE,
-
+    
     estado VARCHAR(20) NOT NULL
     CHECK (
         estado IN (
@@ -336,11 +338,13 @@ CREATE TABLE nombramiento (
 
     CONSTRAINT fk_nombramiento_asambleista
         FOREIGN KEY (asambleista_id)
-        REFERENCES asambleista(asambleista_id),
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
 
     CONSTRAINT fk_nombramiento_sector
         FOREIGN KEY (sector_id)
-        REFERENCES catalogo_sector(id_sector),
+        REFERENCES catalogo_sector(id_sector)
+        ON DELETE RESTRICT,
 
     CONSTRAINT fk_nombramiento_puesto
         FOREIGN KEY (id_puesto)
@@ -348,7 +352,10 @@ CREATE TABLE nombramiento (
 
     CONSTRAINT fk_nombramiento_resolucion
         FOREIGN KEY (resolucion_id)
-        REFERENCES resolucion(resolucion_id)
+        REFERENCES resolucion(resolucion_id),
+
+    CONSTRAINT chk_fechas_nombramiento
+    CHECK (fecha_fin IS NULL OR fecha_fin > fecha_inicio)
 );
 
 CREATE TABLE bitacora_asambleistas (
@@ -471,3 +478,30 @@ ON asambleista(cedula);
 
 CREATE INDEX idx_nombramiento_estado
 ON nombramiento(estado);
+-- *****************
+-- **Datos semilla**
+-- *****************
+
+INSERT INTO sys_rol (nombre_rol) VALUES
+  ('SECRETARIA'),
+  ('ASISTENTE'),
+  ('CONSULTA');
+
+INSERT INTO sys_permiso (nombre_permiso, description) VALUES
+  ('EMITIR_CERTIFICACION', 'Permite emitir certificaciones legales'),
+  ('GESTIONAR_ASAMBLEISTAS', 'Permite registrar y editar asambleístas'),
+  ('VER_REGLAMENTOS', 'Permite consultar el compilador normativo');
+
+-- Asignar permisos por rol
+-- SECRETARIA tiene todos los permisos
+INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
+  (1, 1), (1, 2), (1, 3);
+
+-- ASISTENTE puede gestionar y ver
+INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
+  (2, 2), (2, 3);
+
+-- CONSULTA solo puede ver
+INSERT INTO sys_rol_permiso (id_rol, id_permiso) VALUES
+  (3, 3);
+
