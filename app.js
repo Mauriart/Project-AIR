@@ -1,56 +1,65 @@
 require('dotenv').config();
 
 const express = require('express');
-const path    = require('path');
+const path = require('path');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares para leer JSON
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Importar rutas y middlewares
-const authRoutes = require('./src/controllers/AuthController');
+// Importar middlewares y controladores
 const { verificarAutenticacion } = require('./src/controllers/AuthController');
+const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
-const buscadorRoutes = require('./src/controllers/BuscadorRoutes');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
+const buscadorController = require('./src/controllers/buscadorController');
 
-// Registrar rutas
+// Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
-app.use('/api/asambleistas', buscadorRoutes);
 app.use('/api/certificaciones', certificacionRoutes);
 
-// Rutas de vistas
+// Rutas buscador
+app.get('/api/asambleistas/buscar', buscadorController.buscarAsambleistas);
+app.get('/api/asambleistas/:id', buscadorController.obtenerAsambleistaPorId);
+app.post('/api/asambleistas/consultar', buscadorController.consultarCertificacion);
+
+// Rutas asableistas
+app.get('/api/asambleistas', buscadorController.listarAsambleistas);
+app.post('/api/asambleistas', buscadorController.crearAsambleista);
+app.put('/api/asambleistas/:id', buscadorController.actualizarAsambleista);
+app.delete('/api/asambleistas/:id', buscadorController.eliminarAsambleista);
+
+// Rutas nombramientos
+app.get('/api/asambleistas/:id/nombramientos', buscadorController.listarNombramientos);
+app.post('/api/asambleistas/:id/nombramientos', buscadorController.crearNombramiento);
+app.put('/api/nombramientos/:id', buscadorController.actualizarNombramiento);
+app.delete('/api/nombramientos/:id', buscadorController.eliminarNombramiento);
+
+// Rutas vistas
+app.get('/buscador', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
+});
+
+app.get('/asambleistas', verificarAutenticacion, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
+});
+
 app.get('/propuesta-nueva', verificarAutenticacion, (req, res) => {
-  res.sendFile(path.join(__dirname, 'src/views/propuesta-nueva.view.html'));
+    res.sendFile(path.join(__dirname, 'src/views/propuesta-nueva.view.html'));
 });
 
-//Ruta de buscador (Issue #3)
-app.get('/buscador', verificarAutenticacion, (req, res) => { 
-  res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
+app.get('/preview-certificacion', verificarAutenticacion, (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
 });
 
-//Ruta de buscador de isssue #1
-app.get('/preview-certificacion', (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      'src/views/certificacion-preview.html'
-    )
-  );
-});
-
-// Ruta de prueba
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {
-  res.json({ ok: true, mensaje: `Hola ${req.usuario.username}` });
+    res.json({ ok: true, mensaje: `Hola ${req.usuario.username}` });
 });
-
 
 app.listen(PORT, () => {
-  console.log(`Servidor AIR corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor AIR corriendo en http://localhost:${PORT}`);
 });
-
-
