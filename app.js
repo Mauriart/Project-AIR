@@ -40,19 +40,27 @@ app.put('/api/nombramientos/:id', asambleistaController.actualizarNombramiento);
 app.delete('/api/nombramientos/:id', asambleistaController.eliminarNombramiento);
 
 // Rutas vistas
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/login.html'));
+});
+
 app.get('/buscador', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
-app.get('/asambleistas', verificarAutenticacion, (req, res) => {
+app.get('/asambleistas', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
-app.get('/propuesta-nueva', verificarAutenticacion, (req, res) => {
+app.get('/propuesta-nueva', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/propuesta-nueva.view.html'));
 });
 
-app.get('/preview-certificacion', verificarAutenticacion, (req, res) => {
+app.get('/preview-certificacion', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
 });
 

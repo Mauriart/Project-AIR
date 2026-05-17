@@ -105,9 +105,73 @@
         .error-flotante {
             background-color: #dc3545;
         }
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #12344d;
+            color: white;
+            padding: 0.75rem 1rem;
+            margin: -1rem -1rem 1.5rem;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+        .app-navbar .brand {
+            font-weight: bold;
+        }
+        .app-navbar .links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .app-navbar a,
+        .app-navbar button {
+            width: auto;
+            color: white;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.9rem;
+        }
+        .app-navbar a:hover,
+        .app-navbar button:hover,
+        .app-navbar a.activo {
+            background: #2c7da0;
+        }
+        @media (max-width: 700px) {
+            .app-navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .app-navbar .links {
+                justify-content: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
+<script>
+    if (!sessionStorage.getItem('airToken')) {
+        window.location.replace('/login');
+    }
+</script>
+
+<nav class="app-navbar">
+    <div class="brand">AIR</div>
+    <div class="links">
+        <a href="/buscador" class="activo">Buscador</a>
+        <a href="/propuesta-nueva">Propuestas</a>
+        <a href="/preview-certificacion">Certificaciones</a>
+        <button type="button" id="logoutBtn">Salir</button>
+    </div>
+</nav>
 
 <!-- ========================================================= -->
 <!-- SECCIÓN 1: ISSUE #3 – BUSCADOR Y CONSULTA (Jimena)        -->
@@ -228,6 +292,12 @@
 </div>
 
 <script>
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        sessionStorage.removeItem('airToken');
+        sessionStorage.removeItem('airRoles');
+        window.location.href = '/login';
+    });
+
     // =========================================================
     // 1. ISSUE #3 – LÓGICA DEL BUSCADOR (Jimena)
     // =========================================================
