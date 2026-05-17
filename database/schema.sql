@@ -478,6 +478,22 @@ ON asambleista(cedula);
 
 CREATE INDEX idx_nombramiento_estado
 ON nombramiento(estado);
+
+-- Folio de certificado
+-- "Este módulo gestiona la emisión de certificaciones. 
+-- El sistema genera un folio único correlativo por año — en este caso CERT-2026-001. 
+-- Este folio es el identificador oficial del documento. 
+-- La generación completa del certificado con datos del asambleísta es parte del Sprint 3."
+CREATE OR REPLACE FUNCTION fn_preview_siguiente_folio()
+RETURNS VARCHAR AS $$
+DECLARE
+    ultimo_id INT;
+    anio INT := EXTRACT(YEAR FROM CURRENT_DATE);
+BEGIN
+    SELECT COUNT(*) INTO ultimo_id FROM sys_log_auditoria WHERE accion = 'CERTIFICACION';
+    RETURN 'CERT-' || anio || '-' || LPAD((ultimo_id + 1)::TEXT, 3, '0');
+END;
+$$ LANGUAGE plpgsql;
 -- *****************
 -- **Datos semilla**
 -- *****************
