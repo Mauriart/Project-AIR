@@ -506,6 +506,8 @@ INSERT INTO sys_rol (nombre_rol) VALUES
 INSERT INTO sys_permiso (nombre_permiso, description) VALUES
   ('EMITIR_CERTIFICACION', 'Permite emitir certificaciones legales'),
   ('GESTIONAR_ASAMBLEISTAS', 'Permite registrar y editar asambleístas'),
+  ('GESTIONAR_PROPUESTAS', 'Permite registrar propuestas y mociones'),
+  ('VER_ASAMBLEISTAS', 'Permite consultar datos de asambleístas'),
   ('VER_REGLAMENTOS', 'Permite consultar el compilador normativo');
 
 -- Asignar permisos por rol
@@ -516,6 +518,8 @@ FROM sys_rol r
 JOIN sys_permiso p ON p.nombre_permiso IN (
   'EMITIR_CERTIFICACION',
   'GESTIONAR_ASAMBLEISTAS',
+  'GESTIONAR_PROPUESTAS',
+  'VER_ASAMBLEISTAS',
   'VER_REGLAMENTOS'
 )
 WHERE r.nombre_rol = 'Administrador';
@@ -526,6 +530,8 @@ SELECT r.id_rol, p.id_permiso
 FROM sys_rol r
 JOIN sys_permiso p ON p.nombre_permiso IN (
   'GESTIONAR_ASAMBLEISTAS',
+  'GESTIONAR_PROPUESTAS',
+  'VER_ASAMBLEISTAS',
   'VER_REGLAMENTOS'
 )
 WHERE r.nombre_rol = 'Secretaría';
@@ -534,7 +540,10 @@ WHERE r.nombre_rol = 'Secretaría';
 INSERT INTO sys_rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso
 FROM sys_rol r
-JOIN sys_permiso p ON p.nombre_permiso = 'VER_REGLAMENTOS'
+JOIN sys_permiso p ON p.nombre_permiso IN (
+  'VER_ASAMBLEISTAS',
+  'VER_REGLAMENTOS'
+)
 WHERE r.nombre_rol = 'Asambleísta';
 
 -- Usuarios semilla para desarrollo
@@ -564,4 +573,3 @@ SELECT u.id_usuario, r.id_rol
 FROM sys_usuario u
 JOIN sys_rol r ON r.nombre_rol = 'Asambleísta'
 WHERE u.username = 'asambleista_air';
-

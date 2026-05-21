@@ -295,8 +295,30 @@
     document.getElementById('logoutBtn').addEventListener('click', () => {
         sessionStorage.removeItem('airToken');
         sessionStorage.removeItem('airRoles');
+        sessionStorage.removeItem('airPermisos');
         window.location.href = '/login';
     });
+
+    const TOKEN = sessionStorage.getItem('airToken');
+    const PERMISOS = JSON.parse(sessionStorage.getItem('airPermisos') || '[]');
+    const PUEDE_GESTIONAR_ASAMBLEISTAS = PERMISOS.includes('GESTIONAR_ASAMBLEISTAS');
+
+    function authFetch(url, options = {}) {
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...(options.headers || {}),
+                'Authorization': `Bearer ${TOKEN}`
+            }
+        });
+    }
+
+    function aplicarPermisosVista() {
+        document.getElementById('btnNuevoAsambleista').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
+        document.getElementById('btnMostrarFormNombramiento').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
+        document.getElementById('guardarAsambleistaBtn').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
+        document.getElementById('guardarNombramientoBtn').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
+    }
 
     // =========================================================
     // 1. ISSUE #3 – LÓGICA DEL BUSCADOR (Jimena)
@@ -304,13 +326,13 @@
     let asambleistaSeleccionado = null;
 
     async function buscarAsambleistas(termino) {
-        const res = await fetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
+        const res = await authFetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
         if (!res.ok) return [];
         return res.json();
     }
 
     async function obtenerAsambleistaPorId(id) {
-        const res = await fetch(`/api/asambleistas/${id}`);
+        const res = await authFetch(`/api/asambleistas/${id}`);
         if (!res.ok) return null;
         return res.json();
     }
@@ -388,7 +410,7 @@
 
     // Cargar listado de asambleístas
     async function cargarListadoAsambleistas() {
-        const res = await fetch('/api/asambleistas');
+        const res = await authFetch('/api/asambleistas');
         if (!res.ok) return;
         const data = await res.json();
         const tbody = document.getElementById('tablaAsambleistasBody');
@@ -400,8 +422,8 @@
                 <td>${a.sector || 'Sin sector'}</td>
                 <td>${a.vigente ? 'VIGENTE' : 'INACTIVO'}</td>
                 <td>
-                    <button onclick="editarAsambleista(${a.id})">Editar</button>
-                    <button onclick="eliminarAsambleista(${a.id})" class="btn-peligro">Eliminar</button>
+                    <button onclick="editarAsambleista(${a.id})">${PUEDE_GESTIONAR_ASAMBLEISTAS ? 'Editar' : 'Ver'}</button>
+                    ${PUEDE_GESTIONAR_ASAMBLEISTAS ? `<button onclick="eliminarAsambleista(${a.id})" class="btn-peligro">Eliminar</button>` : ''}
                 </td>
             </tr>
         `).join('');
@@ -420,14 +442,17 @@
     };
 
     window.editarAsambleista = async (id) => {
-        const res = await fetch(`/api/asambleistas/${id}`);
+        const res = await authFetch(`/api/asambleistas/${id}`);
         if (!res.ok) return alert('Error al cargar datos');
         const data = await res.json();
-        document.getElementById('formAsambleistaTitulo').innerText = 'Editar Asambleísta';
+        document.getElementById('formAsambleistaTitulo').innerText = PUEDE_GESTIONAR_ASAMBLEISTAS ? 'Editar Asambleísta' : 'Detalle de Asambleísta';
         document.getElementById('asambleistaId').value = data.id;
         document.getElementById('editCedula').value = data.cedula;
         document.getElementById('editNombre').value = data.nombre;
         document.getElementById('editCorreo').value = data.correo;
+        document.getElementById('editCedula').disabled = !PUEDE_GESTIONAR_ASAMBLEISTAS;
+        document.getElementById('editNombre').disabled = !PUEDE_GESTIONAR_ASAMBLEISTAS;
+        document.getElementById('editCorreo').disabled = !PUEDE_GESTIONAR_ASAMBLEISTAS;
         document.getElementById('formAsambleista').style.display = 'block';
         asambleistaActualId = data.id;
         // Cargar nombramientos para este asambleísta
@@ -436,8 +461,9 @@
     };
 
     window.eliminarAsambleista = async (id) => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         if (!confirm('¿Eliminar este asambleísta? Solo posible si no tiene nombramientos.')) return;
-        const res = await fetch(`/api/asambleistas/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/asambleistas/${id}`, { method: 'DELETE' });
         if (res.ok) {
             mostrarMensaje('Asambleísta eliminado');
             await cargarListadoAsambleistas();
@@ -453,6 +479,7 @@
     };
 
     document.getElementById('guardarAsambleistaBtn').onclick = async () => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         const id = document.getElementById('asambleistaId').value;
         const cedula = document.getElementById('editCedula').value.trim();
         const nombre = document.getElementById('editNombre').value.trim();
@@ -463,7 +490,7 @@
         }
         const url = id ? `/api/asambleistas/${id}` : '/api/asambleistas';
         const method = id ? 'PUT' : 'POST';
-        const res = await fetch(url, {
+        const res = await authFetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ cedula, nombre, correo })
@@ -494,7 +521,7 @@
 
     // Nombramientos
     async function cargarNombramientos(asambleistaId) {
-        const res = await fetch(`/api/asambleistas/${asambleistaId}/nombramientos`);
+        const res = await authFetch(`/api/asambleistas/${asambleistaId}/nombramientos`);
         if (!res.ok) return;
         const data = await res.json();
         const tbody = document.getElementById('tablaNombramientosBody');
@@ -510,8 +537,8 @@
                     <td>${n.fecha_fin ? new Date(n.fecha_fin).toLocaleDateString() : ''}</td>
                     <td>${n.estado}</td>
                     <td>
-                        <button onclick="editarNombramiento(${n.nombramiento_id})">Editar</button>
-                        <button onclick="eliminarNombramiento(${n.nombramiento_id})" class="btn-peligro">Eliminar</button>
+                        ${PUEDE_GESTIONAR_ASAMBLEISTAS ? `<button onclick="editarNombramiento(${n.nombramiento_id})">Editar</button>
+                        <button onclick="eliminarNombramiento(${n.nombramiento_id})" class="btn-peligro">Eliminar</button>` : 'Solo lectura'}
                     </td>
                 </tr>
             `).join('');
@@ -532,8 +559,9 @@
     }
 
     window.editarNombramiento = async (id) => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         // Obtener datos del nombramiento (necesitas un GET /api/nombramientos/:id)
-        const res = await fetch(`/api/nombramientos/${id}`);
+        const res = await authFetch(`/api/nombramientos/${id}`);
         if (!res.ok) return alert('Error al cargar nombramiento');
         const data = await res.json();
         document.getElementById('nombramientoId').value = data.nombramiento_id;
@@ -547,8 +575,9 @@
     };
 
     window.eliminarNombramiento = async (id) => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         if (!confirm('¿Eliminar este nombramiento?')) return;
-        const res = await fetch(`/api/nombramientos/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/nombramientos/${id}`, { method: 'DELETE' });
         if (res.ok) {
             mostrarMensaje('Nombramiento eliminado');
             await cargarNombramientos(asambleistaActualId);
@@ -558,6 +587,7 @@
     };
 
     document.getElementById('btnMostrarFormNombramiento').onclick = () => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         if (!asambleistaActualId) {
             alert('Primero guarde o seleccione un asambleísta');
             return;
@@ -573,6 +603,7 @@
     };
 
     document.getElementById('guardarNombramientoBtn').onclick = async () => {
+        if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
         if (!asambleistaActualId) {
             alert('No hay asambleísta seleccionado');
             return;
@@ -592,7 +623,7 @@
         }
         const url = id ? `/api/nombramientos/${id}` : `/api/asambleistas/${asambleistaActualId}/nombramientos`;
         const method = id ? 'PUT' : 'POST';
-        const res = await fetch(url, {
+        const res = await authFetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -623,6 +654,7 @@
     document.getElementById('filtroListado').addEventListener('input', () => cargarListadoAsambleistas());
 
     // Inicializar
+    aplicarPermisosVista();
     cargarListadoAsambleistas();
     cargarCatalogos();
 </script>

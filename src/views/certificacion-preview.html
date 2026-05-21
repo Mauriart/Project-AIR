@@ -140,16 +140,30 @@
         document.getElementById('logoutBtn').addEventListener('click', () => {
             sessionStorage.removeItem('airToken');
             sessionStorage.removeItem('airRoles');
+            sessionStorage.removeItem('airPermisos');
             window.location.href = '/login';
         });
 
+        const TOKEN = sessionStorage.getItem('airToken');
+        const PERMISOS = JSON.parse(sessionStorage.getItem('airPermisos') || '[]');
         const boton = document.getElementById('btnPreview');
         const resultado = document.getElementById('resultado');
 
+        if (!PERMISOS.includes('EMITIR_CERTIFICACION')) {
+            boton.style.display = 'none';
+            resultado.textContent = 'No tenes permisos para emitir certificaciones.';
+        }
+
         boton.addEventListener('click', async () => {
             try {
-                const response = await fetch('/api/certificaciones/preview-folio');
+                const response = await fetch('/api/certificaciones/preview-folio', {
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
+                });
                 const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.mensaje || 'No se pudo obtener el folio');
+                }
 
                 resultado.textContent = `Proximo folio: ${data.folio}`;
             } catch (error) {

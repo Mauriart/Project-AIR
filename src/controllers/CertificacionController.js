@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const pool = require('../config/db');
+const { verificarAutenticacion, requierePermiso } = require('./AuthController');
 
-router.get('/preview-folio', async (req, res) => {
+router.get('/preview-folio', verificarAutenticacion, requierePermiso('EMITIR_CERTIFICACION'), async (req, res) => {
 
     try {
 

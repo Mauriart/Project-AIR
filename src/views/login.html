@@ -173,6 +173,7 @@
         authToken = data.token;
         sessionStorage.setItem('airToken', authToken);
         sessionStorage.setItem('airRoles', JSON.stringify(data.roles || []));
+        sessionStorage.setItem('airPermisos', JSON.stringify(data.permisos || []));
 
         mostrarMensaje('Login exitoso. Redirigiendo...', 'exito');
         window.location.href = '/buscador';

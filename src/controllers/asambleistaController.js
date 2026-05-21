@@ -138,6 +138,22 @@ async function crearNombramiento(req, res) {
     }
 }
 
+async function obtenerNombramientoPorId(req, res) {
+    const id = parseInt(req.params.id);
+    try {
+        const query = `
+            SELECT *
+            FROM nombramiento
+            WHERE nombramiento_id = $1
+        `;
+        const { rows } = await pool.query(query, [id]);
+        if (rows.length === 0) return res.status(404).json({ error: 'Nombramiento no encontrado' });
+        res.json(rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener nombramiento' });
+    }
+}
+
 async function actualizarNombramiento(req, res) {
     const id = parseInt(req.params.id);
     const { sector_id, id_puesto, resolucion_id, fecha_inicio, fecha_fin, estado } = req.body;
@@ -181,6 +197,7 @@ module.exports = {
     // Colaboración (Nombramientos)
     listarNombramientos,
     crearNombramiento,
+    obtenerNombramientoPorId,
     actualizarNombramiento,
     eliminarNombramiento
 };

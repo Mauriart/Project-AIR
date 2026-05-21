@@ -23,6 +23,19 @@ async function obtenerRoles(id_usuario) {
   return resultado.rows.map(r => r.nombre_rol);
 }
 
+// Obtiene los permisos efectivos de un usuario a partir de sus roles
+async function obtenerPermisos(id_usuario) {
+  const resultado = await db.query(
+    `SELECT DISTINCT p.nombre_permiso
+     FROM sys_permiso p
+     JOIN sys_rol_permiso rp ON p.id_permiso = rp.id_permiso
+     JOIN sys_usuario_rol ur ON rp.id_rol = ur.id_rol
+     WHERE ur.id_usuario = $1`,
+    [id_usuario]
+  );
+  return resultado.rows.map(p => p.nombre_permiso);
+}
+
 // Registra una acción en la bitácora
 async function registrarLog(id_usuario, accion, tabla, detalle, ip = null) {
   await db.query(
@@ -36,5 +49,6 @@ async function registrarLog(id_usuario, accion, tabla, detalle, ip = null) {
 module.exports = {
   buscarPorUsername,
   obtenerRoles,
+  obtenerPermisos,
   registrarLog,
 };

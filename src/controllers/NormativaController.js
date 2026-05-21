@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 
 const NormativaModel = require('../models/NormativaModel');
-const { verificarAutenticacion } = require('./AuthController');
+const { verificarAutenticacion, requierePermiso } = require('./AuthController');
 
 // GET /normativa/reglamentos
 // Devuelve la lista de todos los reglamentos
@@ -43,7 +43,7 @@ router.get('/propuestas', verificarAutenticacion, async (req, res) => {
 
 // POST /normativa/propuestas
 // Crea una nueva propuesta
-router.post('/propuestas', verificarAutenticacion, async (req, res) => {
+router.post('/propuestas', verificarAutenticacion, requierePermiso('GESTIONAR_PROPUESTAS'), async (req, res) => {
   const {
     id_reglamento_base, id_etapa_propuesta,
     id_estado_propuesta, id_propuesta_padre,

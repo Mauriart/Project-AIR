@@ -337,6 +337,7 @@
   document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.removeItem('airToken');
     sessionStorage.removeItem('airRoles');
+    sessionStorage.removeItem('airPermisos');
     window.location.href = '/login';
   });
 
@@ -350,9 +351,14 @@
   // =============================================
 
   const TOKEN = sessionStorage.getItem('airToken');
+  const PERMISOS = JSON.parse(sessionStorage.getItem('airPermisos') || '[]');
+  const PUEDE_GESTIONAR_PROPUESTAS = PERMISOS.includes('GESTIONAR_PROPUESTAS');
 
   // Al cargar la página, llena los selectores dinámicamente
   document.addEventListener('DOMContentLoaded', async () => {
+    if (!PUEDE_GESTIONAR_PROPUESTAS) {
+      document.getElementById('btnGuardar').style.display = 'none';
+    }
     await cargarReglamentos();
     await cargarSesiones();
     await cargarPropuestas();
@@ -425,6 +431,11 @@
 
   // Envía el formulario al controlador
   async function guardarPropuesta() {
+    if (!PUEDE_GESTIONAR_PROPUESTAS) {
+      mostrarAlerta('error', 'No tenes permisos para esta accion.');
+      return;
+    }
+
     const titulo                  = document.getElementById('titulo').value.trim();
     const codigo_air              = document.getElementById('codigo_air').value.trim();
     const id_reglamento_base      = document.getElementById('id_reglamento_base').value;

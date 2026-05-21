@@ -165,7 +165,7 @@ Define los roles disponibles en el sistema.
 **Roles del sistema:**
 - `Administrador` - autoridad maxima, administra usuarios, emite certificaciones y gestiona asambleistas
 - `Secretaría` - carga datos, prepara borradores y gestiona asambleistas
-- `Asambleísta` - solo lectura del compilador de reglamentos
+- `Asambleísta` - solo lectura de asambleístas y del compilador de reglamentos
 
 ---
 
