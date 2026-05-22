@@ -573,3 +573,70 @@ SELECT u.id_usuario, r.id_rol
 FROM sys_usuario u
 JOIN sys_rol r ON r.nombre_rol = 'Asambleísta'
 WHERE u.username = 'asambleista_air';
+
+
+-- ============================
+-- SPRINT 3: Issue #11 — Quórum 
+-- ============================
+
+CREATE TABLE catalogo_estado_asistencia (
+    id_estado_asistencia SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL
+);
+
+INSERT INTO catalogo_estado_asistencia (nombre) VALUES
+    ('Presente'),
+    ('Ausente'),
+    ('Justificado');
+
+CREATE TABLE asistencia_sesion_plenaria (
+    id_asistencia        SERIAL PRIMARY KEY,
+    id_asambleista       INT NOT NULL,
+    id_sesion            INT NOT NULL,
+    id_estado_asistencia INT NOT NULL,
+    fecha_registro       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Un asambleísta solo puede tener un registro por sesión
+    CONSTRAINT uq_asistencia_sesion
+        UNIQUE (id_asambleista, id_sesion),
+
+    CONSTRAINT fk_asistencia_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asistencia_sesion
+        FOREIGN KEY (id_sesion)
+        REFERENCES sesiones(id_sesion)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asistencia_estado
+        FOREIGN KEY (id_estado_asistencia)
+        REFERENCES catalogo_estado_asistencia(id_estado_asistencia)
+        ON DELETE RESTRICT
+);
+
+-- Función que valida si una sesión tiene quórum legal
+-- Retorna TRUE si los presentes >= quorum requerido de la sesión
+CREATE OR REPLACE FUNCTION validar_quorum_legal(p_id_sesion INT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    total_presentes INT;
+    quorum_requerido INT;
+BEGIN
+    -- Contar asambleístas con estado Presente en esa sesión
+    SELECT COUNT(*) INTO total_presentes
+    FROM asistencia_sesion_plenaria asp
+    JOIN catalogo_estado_asistencia cea 
+        ON asp.id_estado_asistencia = cea.id_estado_asistencia
+    WHERE asp.id_sesion = p_id_sesion
+      AND cea.nombre = 'Presente';
+
+    -- Obtener el quórum requerido de la sesión
+    SELECT quorum INTO quorum_requerido
+    FROM sesiones
+    WHERE id_sesion = p_id_sesion;
+
+    RETURN total_presentes >= quorum_requerido;
+END;
+$$ LANGUAGE plpgsql;
