@@ -573,3 +573,154 @@ SELECT u.id_usuario, r.id_rol
 FROM sys_usuario u
 JOIN sys_rol r ON r.nombre_rol = 'Asambleísta'
 WHERE u.username = 'asambleista_air';
+
+-- =========================================
+-- SPRINT 3: Issue #11 — Quórum y Asistencia
+-- =========================================
+
+CREATE TABLE catalogo_estado_asistencia (
+    id_estado_asistencia SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL
+);
+
+INSERT INTO catalogo_estado_asistencia (nombre) VALUES
+    ('Presente'),
+    ('Ausente'),
+    ('Justificado');
+
+CREATE TABLE asistencia_sesion_plenaria (
+    id_asistencia        SERIAL PRIMARY KEY,
+    id_asambleista       INT NOT NULL,
+    id_sesion            INT NOT NULL,
+    id_estado_asistencia INT NOT NULL,
+    fecha_registro       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Un asambleísta solo puede tener un registro por sesión
+    CONSTRAINT uq_asistencia_sesion
+        UNIQUE (id_asambleista, id_sesion),
+
+    CONSTRAINT fk_asistencia_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asistencia_sesion
+        FOREIGN KEY (id_sesion)
+        REFERENCES sesiones(id_sesion)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asistencia_estado
+        FOREIGN KEY (id_estado_asistencia)
+        REFERENCES catalogo_estado_asistencia(id_estado_asistencia)
+        ON DELETE RESTRICT
+);
+
+-- Función que valida si una sesión tiene quórum legal
+-- Retorna TRUE si los presentes >= quorum requerido de la sesión
+CREATE OR REPLACE FUNCTION validar_quorum_legal(p_id_sesion INT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    total_presentes INT;
+    quorum_requerido INT;
+BEGIN
+    -- Contar asambleístas con estado Presente en esa sesión
+    SELECT COUNT(*) INTO total_presentes
+    FROM asistencia_sesion_plenaria asp
+    JOIN catalogo_estado_asistencia cea 
+        ON asp.id_estado_asistencia = cea.id_estado_asistencia
+    WHERE asp.id_sesion = p_id_sesion
+      AND cea.nombre = 'Presente';
+
+    -- Obtener el quórum requerido de la sesión
+    SELECT quorum INTO quorum_requerido
+    FROM sesiones
+    WHERE id_sesion = p_id_sesion;
+
+    RETURN total_presentes >= quorum_requerido;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =========================================
+-- SPRINT 3: Issue #5 — Foliado y Certificaciones
+-- =========================================
+
+-- Lleva el control del último número de folio por año
+CREATE TABLE control_folio (
+    id_control          SERIAL PRIMARY KEY,
+    anio                INT NOT NULL,
+    prefijo             VARCHAR(10) NOT NULL DEFAULT 'DAIR',
+    ultimo_numero       INT NOT NULL DEFAULT 0,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Solo puede existir un registro por año y prefijo
+    CONSTRAINT uq_folio_anio_prefijo
+        UNIQUE (anio, prefijo)
+);
+
+-- Registro inmutable de certificaciones emitidas
+CREATE TABLE certificacion_emitida (
+    id_certificacion    SERIAL PRIMARY KEY,
+    id_asambleista      INT NOT NULL,
+    folio_unico         VARCHAR(20) NOT NULL UNIQUE,
+    hash_seguridad      VARCHAR(64),
+    fecha_emision       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    usuario_secretaria  VARCHAR(80) NOT NULL,
+
+    CONSTRAINT fk_cert_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT
+);
+
+-- Trigger que bloquea modificar o borrar certificaciones ya emitidas
+-- Garantiza la inmutabilidad legal del documento
+CREATE OR REPLACE FUNCTION fn_no_repudio_cert()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION
+        'Una certificación emitida no puede modificarse ni eliminarse. Folio: %',
+        OLD.folio_unico;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_no_repudio_cert
+BEFORE UPDATE OR DELETE ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION fn_no_repudio_cert();
+
+-- Trigger que genera el folio automáticamente al insertar
+-- Hace LOCK para evitar duplicados en concurrencia
+CREATE OR REPLACE FUNCTION fn_folio_secuencial()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_anio      INT := EXTRACT(YEAR FROM CURRENT_DATE);
+    v_numero    INT;
+    v_prefijo   VARCHAR(10) := 'DAIR';
+BEGIN
+    -- LOCK para evitar que dos usuarios obtengan el mismo número
+    PERFORM pg_advisory_xact_lock(1);
+
+    -- Insertar el año si no existe, o sumar 1 al último número
+    INSERT INTO control_folio (anio, prefijo, ultimo_numero)
+    VALUES (v_anio, v_prefijo, 1)
+    ON CONFLICT (anio, prefijo)
+    DO UPDATE SET
+        ultimo_numero       = control_folio.ultimo_numero + 1,
+        fecha_actualizacion = CURRENT_TIMESTAMP
+    RETURNING ultimo_numero INTO v_numero;
+
+    -- Asignar el folio con formato DAIR-009-2026
+    NEW.folio_unico := v_prefijo || '-' || LPAD(v_numero::TEXT, 3, '0') || '-' || v_anio;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_folio_secuencial
+BEFORE INSERT ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION fn_folio_secuencial();
+
+-- Dato semilla: registro inicial del año actual
+INSERT INTO control_folio (anio, prefijo, ultimo_numero)
+VALUES (2026, 'DAIR', 0);
