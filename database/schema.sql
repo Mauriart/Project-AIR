@@ -574,6 +574,10 @@ FROM sys_usuario u
 JOIN sys_rol r ON r.nombre_rol = 'Asambleísta'
 WHERE u.username = 'asambleista_air';
 
+
+-- ============================
+-- SPRINT 3: Issue #11 — Quórum 
+-- ============================
 -- =========================================
 -- SPRINT 3: Issue #11 — Quórum y Asistencia
 -- =========================================
