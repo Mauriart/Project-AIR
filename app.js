@@ -16,11 +16,13 @@ const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
 const asambleistaController = require('./src/controllers/asambleistaController');
+const sesionRoutes = require('./src/controllers/SesionController');
 
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
 app.use('/api/certificaciones', certificacionRoutes);
+app.use('/sesiones', sesionRoutes);
 
 // Rutas buscador
 app.get('/api/asambleistas/buscar', verificarAutenticacion, asambleistaController.buscarAsambleistas);
@@ -67,6 +69,10 @@ app.get('/preview-certificacion', (req, res) => {
 
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {
     res.json({ ok: true, mensaje: `Hola ${req.usuario.username}` });
+});
+
+app.get('/asistencia', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src/views/sesion-asistencia.view.html'));
 });
 
 app.listen(PORT, () => {

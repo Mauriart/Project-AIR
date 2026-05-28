@@ -578,6 +578,9 @@ WHERE u.username = 'asambleista_air';
 -- ============================
 -- SPRINT 3: Issue #11 — Quórum 
 -- ============================
+-- =========================================
+-- SPRINT 3: Issue #11 — Quórum y Asistencia
+-- =========================================
 
 CREATE TABLE catalogo_estado_asistencia (
     id_estado_asistencia SERIAL PRIMARY KEY,
@@ -640,3 +643,268 @@ BEGIN
     RETURN total_presentes >= quorum_requerido;
 END;
 $$ LANGUAGE plpgsql;
+
+-- =========================================
+-- SPRINT 3: Issue #5 — Foliado y Certificaciones
+-- =========================================
+
+-- Lleva el control del último número de folio por año
+CREATE TABLE control_folio (
+    id_control          SERIAL PRIMARY KEY,
+    anio                INT NOT NULL,
+    prefijo             VARCHAR(10) NOT NULL DEFAULT 'DAIR',
+    ultimo_numero       INT NOT NULL DEFAULT 0,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Solo puede existir un registro por año y prefijo
+    CONSTRAINT uq_folio_anio_prefijo
+        UNIQUE (anio, prefijo)
+);
+
+-- Registro inmutable de certificaciones emitidas
+CREATE TABLE certificacion_emitida (
+    id_certificacion    SERIAL PRIMARY KEY,
+    id_asambleista      INT NOT NULL,
+    folio_unico         VARCHAR(20) NOT NULL UNIQUE,
+    hash_seguridad      VARCHAR(64),
+    fecha_emision       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    usuario_secretaria  VARCHAR(80) NOT NULL,
+
+    CONSTRAINT fk_cert_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT
+);
+
+-- Trigger que bloquea modificar o borrar certificaciones ya emitidas
+-- Garantiza la inmutabilidad legal del documento
+CREATE OR REPLACE FUNCTION fn_no_repudio_cert()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION
+        'Una certificación emitida no puede modificarse ni eliminarse. Folio: %',
+        OLD.folio_unico;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_no_repudio_cert
+BEFORE UPDATE OR DELETE ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION fn_no_repudio_cert();
+
+-- Trigger que genera el folio automáticamente al insertar
+-- Hace LOCK para evitar duplicados en concurrencia
+CREATE OR REPLACE FUNCTION fn_folio_secuencial()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_anio      INT := EXTRACT(YEAR FROM CURRENT_DATE);
+    v_numero    INT;
+    v_prefijo   VARCHAR(10) := 'DAIR';
+BEGIN
+    -- LOCK para evitar que dos usuarios obtengan el mismo número
+    PERFORM pg_advisory_xact_lock(1);
+
+    -- Insertar el año si no existe, o sumar 1 al último número
+    INSERT INTO control_folio (anio, prefijo, ultimo_numero)
+    VALUES (v_anio, v_prefijo, 1)
+    ON CONFLICT (anio, prefijo)
+    DO UPDATE SET
+        ultimo_numero       = control_folio.ultimo_numero + 1,
+        fecha_actualizacion = CURRENT_TIMESTAMP
+    RETURNING ultimo_numero INTO v_numero;
+
+    -- Asignar el folio con formato DAIR-009-2026
+    NEW.folio_unico := v_prefijo || '-' || LPAD(v_numero::TEXT, 3, '0') || '-' || v_anio;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_folio_secuencial
+BEFORE INSERT ON certificacion_emitida
+FOR EACH ROW
+EXECUTE FUNCTION fn_folio_secuencial();
+
+-- Dato semilla: registro inicial del año actual
+INSERT INTO control_folio (anio, prefijo, ultimo_numero)
+VALUES (2026, 'DAIR', 0);
+
+-- =========================================
+-- SPRINT 3: Issue #7 — Comisiones
+-- =========================================
+
+CREATE TABLE comision (
+    id_comision     SERIAL PRIMARY KEY,
+    nombre_comision VARCHAR(200) NOT NULL,
+    fecha_creacion  DATE NOT NULL DEFAULT CURRENT_DATE,
+    activa          BOOLEAN DEFAULT TRUE
+);
+
+-- Relación de comisión con las propuestas que analiza
+CREATE TABLE proposito_comision (
+    id_proposito_comision SERIAL PRIMARY KEY,
+    id_comision           INT NOT NULL,
+    id_propuesta          INT NOT NULL,
+    descripcion           TEXT,
+
+    CONSTRAINT uq_comision_propuesta
+        UNIQUE (id_comision, id_propuesta),
+
+    CONSTRAINT fk_proposito_comision
+        FOREIGN KEY (id_comision)
+        REFERENCES comision(id_comision)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_proposito_propuesta
+        FOREIGN KEY (id_propuesta)
+        REFERENCES propuesta(id_propuesta)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE catalogo_rol_comision (
+    id_rol_comision SERIAL PRIMARY KEY,
+    nombre          VARCHAR(80) UNIQUE NOT NULL
+);
+
+INSERT INTO catalogo_rol_comision (nombre) VALUES
+    ('Coordinador'),
+    ('Miembro'),
+    ('Secretario');
+
+CREATE TABLE integrante_comision (
+    id_integrante_comision SERIAL PRIMARY KEY,
+    id_comision            INT NOT NULL,
+    id_asambleista         INT NOT NULL,
+    id_rol_comision        INT NOT NULL,
+    fecha_ingreso          DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_salida           DATE,
+    estado                 VARCHAR(20) NOT NULL DEFAULT 'ACTIVO'
+        CHECK (estado IN ('ACTIVO', 'INACTIVO')),
+
+    CONSTRAINT uq_integrante_activo
+        UNIQUE (id_comision, id_asambleista),
+
+    CONSTRAINT fk_integrante_comision
+        FOREIGN KEY (id_comision)
+        REFERENCES comision(id_comision)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_integrante_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_integrante_rol
+        FOREIGN KEY (id_rol_comision)
+        REFERENCES catalogo_rol_comision(id_rol_comision)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_fechas_integrante
+        CHECK (fecha_salida IS NULL OR fecha_salida > fecha_ingreso)
+);
+
+CREATE TABLE sesion_comision (
+    id_sesion_comision SERIAL PRIMARY KEY,
+    id_comision        INT NOT NULL,
+    fecha_hora         TIMESTAMP NOT NULL,
+    descripcion        TEXT,
+
+    CONSTRAINT fk_sesion_comision
+        FOREIGN KEY (id_comision)
+        REFERENCES comision(id_comision)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE asistencia_sesion_comision (
+    id_asistencia_comision SERIAL PRIMARY KEY,
+    id_sesion_comision     INT NOT NULL,
+    id_asambleista         INT NOT NULL,
+    id_estado_asistencia   INT NOT NULL,
+
+    CONSTRAINT uq_asistencia_comision
+        UNIQUE (id_sesion_comision, id_asambleista),
+
+    CONSTRAINT fk_asist_sesion_comision
+        FOREIGN KEY (id_sesion_comision)
+        REFERENCES sesion_comision(id_sesion_comision)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asist_asambleista_comision
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_asist_estado_comision
+        FOREIGN KEY (id_estado_asistencia)
+        REFERENCES catalogo_estado_asistencia(id_estado_asistencia)
+        ON DELETE RESTRICT
+);
+
+-- =========================================
+-- SPRINT 3: Issue #12 — Votaciones
+-- =========================================
+
+CREATE TABLE votacion_acuerdo (
+    id_votacion      SERIAL PRIMARY KEY,
+    id_sesion        INT NOT NULL,
+    id_propuesta     INT NOT NULL,
+    votos_favor      INT NOT NULL DEFAULT 0,
+    votos_contra     INT NOT NULL DEFAULT 0,
+    abstenciones     INT NOT NULL DEFAULT 0,
+    resultado        VARCHAR(20),
+    fecha_votacion   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    es_firme         BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT uq_votacion_sesion_propuesta
+        UNIQUE (id_sesion, id_propuesta),
+
+    CONSTRAINT fk_votacion_sesion
+        FOREIGN KEY (id_sesion)
+        REFERENCES sesiones(id_sesion)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_votacion_propuesta
+        FOREIGN KEY (id_propuesta)
+        REFERENCES propuesta(id_propuesta)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_votos_positivos
+        CHECK (votos_favor >= 0 AND votos_contra >= 0 AND abstenciones >= 0),
+
+    CONSTRAINT chk_resultado
+        CHECK (resultado IN ('Aprobada', 'Rechazada', NULL))
+);
+
+-- Trigger que bloquea modificar una votación ya firmada
+CREATE OR REPLACE FUNCTION fn_no_modificar_votacion_firme()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.es_firme = TRUE THEN
+        RAISE EXCEPTION
+            'Esta votación ya fue firmada y no puede modificarse.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_votacion_firme
+BEFORE UPDATE ON votacion_acuerdo
+FOR EACH ROW
+EXECUTE FUNCTION fn_no_modificar_votacion_firme();
+
+-- =========================================
+-- SPRINT 3: Issue #13 — Anulación de certificaciones
+-- =========================================
+
+CREATE TABLE anulacion_certificacion (
+    id_anulacion     SERIAL PRIMARY KEY,
+    id_certificacion INT NOT NULL,
+    motivo           TEXT NOT NULL,
+    usuario_anula    VARCHAR(80) NOT NULL,
+    fecha_anulacion  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_anulacion_certificacion
+        FOREIGN KEY (id_certificacion)
+        REFERENCES certificacion_emitida(id_certificacion)
+        ON DELETE RESTRICT
+);
