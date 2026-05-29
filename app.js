@@ -57,6 +57,16 @@ app.get('/buscador', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
+app.get('/vista-comisiones', (req, res) => {
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      'src/views/comisiones.view.html'
+    )
+  );
+});
+
 app.get('/asambleistas', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
@@ -67,16 +77,6 @@ app.get('/propuesta-nueva', (req, res) => {
 
 app.get('/preview-certificacion', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
-});
-
-app.get('/vista-comisiones', (req, res) => {
-
-    res.sendFile(
-        path.join(
-            __dirname,
-            'src/views/comisiones.view.html'
-        )
-    );
 });
 
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {

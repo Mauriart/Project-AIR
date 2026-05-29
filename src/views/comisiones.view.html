@@ -1,71 +1,305 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <title>Comisiones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comisiones AIR</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: #f9f9f9;
+        }
+
+        h1, h2, h3 {
+            color: #1a3e60;
+        }
+
+        button {
+            background-color: #2c7da0;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1f5e7a;
+        }
+
+        .btn-peligro {
+            background-color: #a11d33;
+        }
+
+        .btn-peligro:hover {
+            background-color: #7a1628;
+        }
+
+        .seccion {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-weight: bold;
+            display: inline-block;
+            width: 140px;
+        }
+
+        input, select {
+            padding: 0.4rem;
+            width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background-color: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.6rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9ecef;
+        }
+
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #12344d;
+            color: white;
+            padding: 0.75rem 1rem;
+            margin: -1rem -1rem 1.5rem;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+
+        .app-navbar .brand {
+            font-weight: bold;
+        }
+
+        .app-navbar .links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .app-navbar a,
+        .app-navbar button {
+            width: auto;
+            color: white;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.9rem;
+        }
+
+        .app-navbar a:hover,
+        .app-navbar button:hover,
+        .app-navbar a.activo {
+            background: #2c7da0;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Listado de Comisiones</h1>
+<script>
+    if (!sessionStorage.getItem('airToken')) {
+        window.location.replace('/login');
+    }
+</script>
 
-    <button id="btnCargar">
-        Cargar Comisiones
+<nav class="app-navbar">
+    <div class="brand">AIR</div>
+
+    <div class="links">
+        <a href="/buscador">Buscador</a>
+        <a href="/propuesta-nueva">Propuestas</a>
+        <a href="/preview-certificacion">Certificaciones</a>
+        <a href="/vista-comisiones" class="activo">Comisiones</a>
+
+        <button type="button" id="logoutBtn">Salir</button>
+    </div>
+</nav>
+
+<div class="seccion">
+
+    <h1>Gestión de Comisiones</h1>
+
+    <h2>📋 Crear Comisión</h2>
+
+    <div class="form-group">
+        <label>Nombre:</label>
+        <input type="text" id="nombreComision">
+    </div>
+
+    <div class="form-group">
+        <label>Descripción:</label>
+        <input type="text" id="descripcionComision">
+    </div>
+
+    <button id="btnCrearComision">
+        Crear comisión
     </button>
 
-    <div id="contenedor"></div>
+</div>
 
-    <script>
+<div class="seccion">
 
-        const boton = document.getElementById('btnCargar');
+    <h2>👥 Listado de Comisiones</h2>
 
-        const contenedor = document.getElementById('contenedor');
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
 
-        boton.addEventListener('click', async () => {
+        <tbody id="tablaComisionesBody">
 
-            try {
+        </tbody>
+    </table>
 
-                const response = await fetch('/api/comisiones');
+</div>
 
-                const data = await response.json();
+<script>
 
-                contenedor.innerHTML = '';
+document.getElementById('logoutBtn').addEventListener('click', () => {
 
-                data.comisiones.forEach(comision => {
+    sessionStorage.removeItem('airToken');
+    sessionStorage.removeItem('airRoles');
+    sessionStorage.removeItem('airPermisos');
 
-                    const div = document.createElement('div');
+    window.location.href = '/login';
+});
 
-                    div.innerHTML = `
-                        <hr>
+const TOKEN = sessionStorage.getItem('airToken');
 
-                        <h3>
-                            ${comision.nombre}
-                        </h3>
+function authFetch(url, options = {}) {
 
-                        <p>
-                            ${comision.descripcion || ''}
-                        </p>
+    return fetch(url, {
 
-                        <p>
-                            Estado:
-                            ${comision.estado}
-                        </p>
-                    `;
+        ...options,
 
-                    contenedor.appendChild(div);
-                });
+        headers: {
+            ...(options.headers || {}),
+            'Authorization': `Bearer ${TOKEN}`
+        }
+    });
+}
 
-            } catch (error) {
+async function cargarComisiones() {
 
-                console.error(error);
+    const res = await authFetch('/comisiones');
 
-                contenedor.innerHTML = 'Error cargando comisiones';
-            }
-        });
+    const data = await res.json();
 
-    </script>
+    const tbody = document.getElementById('tablaComisionesBody');
+
+    tbody.innerHTML = data.map(c => `
+
+        <tr>
+            <td>${c.id_comision}</td>
+            <td>${c.nombre}</td>
+            <td>${c.descripcion}</td>
+
+            <td>
+                <button onclick="eliminarComision(${c.id_comision})" class="btn-peligro">
+                    Eliminar
+                </button>
+            </td>
+        </tr>
+
+    `).join('');
+}
+
+document.getElementById('btnCrearComision').addEventListener('click', async () => {
+
+    const nombre = document.getElementById('nombreComision').value;
+
+    const descripcion = document.getElementById('descripcionComision').value;
+
+    const res = await authFetch('/comisiones', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            nombre,
+            descripcion
+        })
+    });
+
+    if (res.ok) {
+
+        alert('Comisión creada');
+
+        document.getElementById('nombreComision').value = '';
+        document.getElementById('descripcionComision').value = '';
+
+        cargarComisiones();
+
+    } else {
+
+        alert('Error al crear comisión');
+    }
+});
+
+async function eliminarComision(id) {
+
+    const confirmar = confirm('¿Eliminar comisión?');
+
+    if (!confirmar) return;
+
+    const res = await authFetch(`/comisiones/${id}`, {
+
+        method: 'DELETE'
+    });
+
+    if (res.ok) {
+
+        cargarComisiones();
+
+    } else {
+
+        alert('Error al eliminar');
+    }
+}
+
+cargarComisiones();
+
+</script>
 
 </body>
-
 </html>
