@@ -16,6 +16,27 @@ router.post('/', async (req, res) => {
     });
   }
 
+  router.get('/:id/integrantes', async (req, res) => {
+
+    try {
+
+        const integrantes =
+            await ComisionModel.obtenerIntegrantes(
+                req.params.id
+            );
+
+        res.json(integrantes);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            error: 'Error obteniendo integrantes'
+        });
+    }
+});
+
   try {
 
     const comision = await ComisionModel.crearComision(

@@ -101,9 +101,43 @@ const registrarAsistencia = async (
     return result.rows[0];
 };
 
+const obtenerIntegrantes = async (idComision) => {
+
+    const query = `
+
+        SELECT
+
+            ic.id_integrante,
+            ic.rol,
+            ic.estado,
+            ic.fecha_inicio,
+            ic.fecha_fin,
+
+            a.asambleista_id,
+            a.nombre,
+            a.cedula
+
+        FROM integrante_comision ic
+
+        INNER JOIN asambleista a
+            ON ic.asambleista_id = a.asambleista_id
+
+        WHERE ic.id_comision = $1
+
+        ORDER BY a.nombre;
+
+    `;
+
+    const result =
+        await pool.query(query, [idComision]);
+
+    return result.rows;
+};
+
 module.exports = {
     crearComision,
     listarComisiones,
     agregarIntegrante,
-    registrarAsistencia
+    registrarAsistencia,
+    obtenerIntegrantes
 };
