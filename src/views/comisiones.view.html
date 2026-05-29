@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Comisiones</title>
+</head>
+
+<body>
+
+    <h1>Listado de Comisiones</h1>
+
+    <button id="btnCargar">
+        Cargar Comisiones
+    </button>
+
+    <div id="contenedor"></div>
+
+    <script>
+
+        const boton = document.getElementById('btnCargar');
+
+        const contenedor = document.getElementById('contenedor');
+
+        boton.addEventListener('click', async () => {
+
+            try {
+
+                const response = await fetch('/api/comisiones');
+
+                const data = await response.json();
+
+                contenedor.innerHTML = '';
+
+                data.comisiones.forEach(comision => {
+
+                    const div = document.createElement('div');
+
+                    div.innerHTML = `
+                        <hr>
+
+                        <h3>
+                            ${comision.nombre}
+                        </h3>
+
+                        <p>
+                            ${comision.descripcion || ''}
+                        </p>
+
+                        <p>
+                            Estado:
+                            ${comision.estado}
+                        </p>
+                    `;
+
+                    contenedor.appendChild(div);
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                contenedor.innerHTML = 'Error cargando comisiones';
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>

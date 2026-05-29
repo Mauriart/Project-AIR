@@ -1,0 +1,141 @@
+const express = require('express');
+const router = express.Router();
+
+const ComisionModel = require('../models/ComisionModel');
+
+
+// POST /comisiones
+router.post('/', async (req, res) => {
+
+  const { nombre, descripcion } = req.body;
+
+  if (!nombre) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'El nombre de la comisión es requerido'
+    });
+  }
+
+  try {
+
+    const comision = await ComisionModel.crearComision(
+      nombre,
+      descripcion
+    );
+
+    return res.status(201).json({
+      ok: true,
+      comision
+    });
+
+  } catch (error) {
+
+    console.error('Error creando comisión:', error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+
+// GET /comisiones
+router.get('/', async (req, res) => {
+
+  try {
+
+    const comisiones =
+      await ComisionModel.listarComisiones();
+
+    return res.status(200).json({
+      ok: true,
+      comisiones
+    });
+
+  } catch (error) {
+
+    console.error('Error obteniendo comisiones:', error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+
+// POST /comisiones/integrantes
+router.post('/integrantes', async (req, res) => {
+
+  const {
+    id_comision,
+    asambleista_id,
+    rol,
+    fecha_inicio,
+    fecha_fin
+  } = req.body;
+
+  try {
+
+    const integrante =
+      await ComisionModel.agregarIntegrante(
+        id_comision,
+        asambleista_id,
+        rol,
+        fecha_inicio,
+        fecha_fin
+      );
+
+    return res.status(201).json({
+      ok: true,
+      integrante
+    });
+
+  } catch (error) {
+
+    console.error('Error agregando integrante:', error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+
+// POST /comisiones/asistencia
+router.post('/asistencia', async (req, res) => {
+
+  const {
+    id_sesion,
+    asambleista_id,
+    estado_asistencia
+  } = req.body;
+
+  try {
+
+    const asistencia =
+      await ComisionModel.registrarAsistencia(
+        id_sesion,
+        asambleista_id,
+        estado_asistencia
+      );
+
+    return res.status(201).json({
+      ok: true,
+      asistencia
+    });
+
+  } catch (error) {
+
+    console.error('Error registrando asistencia:', error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Error interno del servidor'
+    });
+  }
+});
+
+module.exports = router;
