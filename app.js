@@ -17,12 +17,14 @@ const normativaRoutes = require('./src/controllers/NormativaController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
 const asambleistaController = require('./src/controllers/asambleistaController');
 const sesionRoutes = require('./src/controllers/SesionController');
+const votacionRoutes = require('./src/controllers/VotacionController');
 
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
 app.use('/api/certificaciones', certificacionRoutes);
 app.use('/sesiones', sesionRoutes);
+app.use('/votaciones', votacionRoutes);
 
 // Rutas buscador
 app.get('/api/asambleistas/buscar', verificarAutenticacion, asambleistaController.buscarAsambleistas);
@@ -73,6 +75,10 @@ app.get('/test-protegido', verificarAutenticacion, (req, res) => {
 
 app.get('/asistencia', (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/sesion-asistencia.view.html'));
+});
+
+app.get('/votaciones-tablero', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src/views/votacion-tablero.view.html'));
 });
 
 app.listen(PORT, () => {
