@@ -7,9 +7,84 @@ const obtenerSiguienteFolio = async () => {
 
     const result = await pool.query(query);
 
-    return result.rows[0];
+    return result.rows[0].folio;
+};
+
+const obtenerCertificaciones = async (filtros = {}) => {
+  const { id_asambleista, fecha_desde, fecha_hasta } = filtros;
+
+  let query = `
+    SELECT
+      c.id_certificacion,
+      c.folio_unico,
+      c.hash_seguridad,
+      c.fecha_emision,
+      c.usuario_secretaria,
+      a.nombre AS asambleista,
+      a.cedula,
+      CASE WHEN an.id_anulacion IS NOT NULL
+        THEN TRUE ELSE FALSE
+      END AS anulada,
+      an.motivo AS motivo_anulacion
+    FROM certificacion_emitida c
+    JOIN asambleista a ON c.id_asambleista = a.asambleista_id
+    LEFT JOIN anulacion_certificacion an ON c.id_certificacion = an.id_certificacion
+    WHERE 1=1
+  `;
+
+  const params = [];
+  if (id_asambleista) { params.push(id_asambleista); query += ` AND c.id_asambleista = $${params.length}`; }
+  if (fecha_desde)    { params.push(fecha_desde);    query += ` AND c.fecha_emision >= $${params.length}`; }
+  if (fecha_hasta)    { params.push(fecha_hasta);     query += ` AND c.fecha_emision <= $${params.length}`; }
+  query += ` ORDER BY c.fecha_emision DESC`;
+
+  const resultado = await pool.query(query, params);
+  return resultado.rows;
+};
+
+const obtenerPorFolio = async (folio) => {
+  const resultado = await pool.query(`
+    SELECT
+      c.id_certificacion, c.folio_unico, c.hash_seguridad,
+      c.fecha_emision, c.usuario_secretaria,
+      a.nombre AS asambleista, a.cedula,
+      CASE WHEN an.id_anulacion IS NOT NULL THEN TRUE ELSE FALSE END AS anulada,
+      an.motivo AS motivo_anulacion
+    FROM certificacion_emitida c
+    JOIN asambleista a ON c.id_asambleista = a.asambleista_id
+    LEFT JOIN anulacion_certificacion an ON c.id_certificacion = an.id_certificacion
+    WHERE c.folio_unico = $1
+  `, [folio]);
+  return resultado.rows[0] || null;
+};
+
+const emitirCertificacion = async (id_asambleista, usuario_secretaria, hash) => {
+  const resultado = await pool.query(`
+    INSERT INTO certificacion_emitida (id_asambleista, hash_seguridad, usuario_secretaria)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `, [id_asambleista, hash, usuario_secretaria]);
+  return resultado.rows[0];
+};
+
+const anularCertificacion = async (id_certificacion, motivo, usuario_anula) => {
+  const existente = await pool.query(`
+    SELECT id_anulacion FROM anulacion_certificacion WHERE id_certificacion = $1
+  `, [id_certificacion]);
+
+  if (existente.rows.length > 0) throw new Error('Esta certificación ya fue anulada');
+
+  const resultado = await pool.query(`
+    INSERT INTO anulacion_certificacion (id_certificacion, motivo, usuario_anula)
+    VALUES ($1, $2, $3) RETURNING *
+  `, [id_certificacion, motivo, usuario_anula]);
+  return resultado.rows[0];
 };
 
 module.exports = {
-    obtenerSiguienteFolio
+  obtenerSiguienteFolio,
+  obtenerCertificaciones,
+  obtenerPorFolio,
+  emitirCertificacion,
+  anularCertificacion
 };
