@@ -22,7 +22,7 @@ const votacionRoutes = require('./src/controllers/VotacionController');
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
-app.use('/api/certificaciones', certificacionRoutes);
+app.use('/certificaciones', certificacionRoutes);
 app.use('/sesiones', sesionRoutes);
 app.use('/votaciones', votacionRoutes);
 
