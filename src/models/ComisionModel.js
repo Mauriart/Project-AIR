@@ -129,7 +129,7 @@ const obtenerIntegrantes = async (idComision) => {
     `;
 
     const result =
-        await pool.query(query, [idComision]);
+        await db.query(query, [idComision]);
 
     return result.rows;
 };
