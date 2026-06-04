@@ -209,4 +209,40 @@ router.delete('/integrantes/:id', async (req, res) => {
 
 });
 
+router.put('/integrantes/:id', async (req, res) => {
+
+    const {
+        rol,
+        estado,
+        fecha_fin
+    } = req.body;
+
+    try {
+
+        const integrante =
+            await ComisionModel.actualizarIntegrante(
+                req.params.id,
+                rol,
+                estado,
+                fecha_fin
+            );
+
+        res.json({
+            ok: true,
+            integrante
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error actualizando integrante'
+        });
+
+    }
+
+});
+
 module.exports = router;

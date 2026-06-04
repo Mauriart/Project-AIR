@@ -111,6 +111,36 @@ const registrarAsistencia = async (
     return result.rows[0];
 };
 
+const actualizarIntegrante = async (
+    idIntegrante,
+    rol,
+    estado,
+    fecha_fin
+) => {
+
+    const query = `
+        UPDATE integrante_comision
+        SET
+            rol = $1,
+            estado = $2,
+            fecha_fin = $3
+        WHERE id_integrante = $4
+        RETURNING *;
+    `;
+
+    const result = await db.query(
+        query,
+        [
+            rol,
+            estado,
+            fecha_fin,
+            idIntegrante
+        ]
+    );
+
+    return result.rows[0];
+};
+
 const obtenerIntegrantes = async (idComision) => {
 
     const query = `
@@ -161,5 +191,6 @@ module.exports = {
     registrarAsistencia,
     obtenerIntegrantes,
     eliminarComision,
-    eliminarIntegrante
+    eliminarIntegrante,
+    actualizarIntegrante
 };

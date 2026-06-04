@@ -198,6 +198,67 @@
         padding:1rem;
         border-radius:8px;
     ">
+    <div
+    id="formEditarIntegrante"
+    style="
+        display:none;
+        margin-top:1rem;
+        border-top:1px solid #ccc;
+        padding-top:1rem;
+    ">
+
+    <h3>Editar integrante</h3>
+
+    <input
+        type="hidden"
+        id="editIdIntegrante">
+
+    <div class="form-group">
+    <label>Rol:</label>
+
+        <select id="editRol">
+
+            <option value="Coordinador">
+                Coordinador
+            </option>
+
+            <option value="Miembro">
+                Miembro
+            </option>
+
+        </select>
+    </div>  
+
+    <div class="form-group">
+        <label>Estado:</label>
+
+        <select id="editEstado">
+
+            <option value="Activo">
+                Activo
+            </option>
+
+            <option value="Inactivo">
+                Inactivo
+            </option>
+
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha fin:</label>
+
+        <input
+            type="date"
+            id="editFechaFin">
+    </div>
+
+    <button id="btnGuardarEdicion">
+        Guardar cambios
+    </button>
+
+</div>
+
     <h3>Agregar integrante</h3>
 
 <div class="form-group">
@@ -248,40 +309,6 @@
         </tbody>
 
     </table>
-    <h3>Agregar integrante</h3>
-
-<div class="form-group">
-    <label>ID Asambleísta:</label>
-    <input
-        type="number"
-        id="asambleistaId">
-</div>
-
-<div class="form-group">
-    <label>Rol:</label>
-
-    <select id="rolIntegrante">
-        <option value="Coordinador">
-            Coordinador
-        </option>
-
-        <option value="Miembro">
-            Miembro
-        </option>
-    </select>
-</div>
-
-<div class="form-group">
-    <label>Fecha inicio:</label>
-
-    <input
-        type="date"
-        id="fechaInicio">
-</div>
-
-<button id="btnAgregarIntegrante">
-    Agregar integrante
-</button>
 
 </div>
 
@@ -459,6 +486,17 @@ async function verIntegrantes(idComision) {
             <td>
 
                 <button
+                    onclick="editarIntegrante(
+                        ${i.id_integrante},
+                        '${i.rol}',
+                        '${i.estado}'
+                    )">
+
+                    Editar
+
+                </button>
+
+                <button
                     class="btn-peligro"
                     onclick="eliminarIntegrante(${i.id_integrante})">
 
@@ -466,7 +504,7 @@ async function verIntegrantes(idComision) {
 
                 </button>
 
-            </td
+            </td>
 
         </tr>
 
@@ -502,6 +540,128 @@ async function eliminarIntegrante(idIntegrante) {
     }
 
 }
+
+function editarIntegrante(
+    idIntegrante,
+    rol,
+    estado
+) {
+
+    document
+        .getElementById(
+            'formEditarIntegrante'
+        )
+        .style.display = 'block';
+
+    document
+        .getElementById(
+            'editIdIntegrante'
+        )
+        .value = idIntegrante;
+
+    document
+        .getElementById(
+            'editRol'
+        )
+        .value = rol;
+
+    document
+        .getElementById(
+            'editEstado'
+        )
+        .value = estado;
+
+}
+
+document
+.getElementById(
+    'btnGuardarEdicion'
+)
+.addEventListener(
+    'click',
+    async () => {
+
+        const idIntegrante =
+            document
+            .getElementById(
+                'editIdIntegrante'
+            )
+            .value;
+
+        const rol =
+            document
+            .getElementById(
+                'editRol'
+            )
+            .value;
+
+        const estado =
+            document
+            .getElementById(
+                'editEstado'
+            )
+            .value;
+
+        const fecha_fin =
+            document
+            .getElementById(
+                'editFechaFin'
+            )
+            .value;
+
+        const res =
+            await authFetch(
+
+                `/comisiones/integrantes/${idIntegrante}`,
+
+                {
+
+                    method: 'PUT',
+
+                    headers: {
+                        'Content-Type':
+                        'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        rol,
+                        estado,
+                        fecha_fin
+
+                    })
+
+                }
+
+            );
+
+        if (res.ok) {
+
+            alert(
+                'Integrante actualizado'
+            );
+
+            verIntegrantes(
+                comisionSeleccionada
+            );
+
+            document
+            .getElementById(
+                'formEditarIntegrante'
+            )
+            .style.display =
+            'none';
+
+        } else {
+
+            alert(
+                'Error actualizando integrante'
+            );
+
+        }
+
+    }
+);
 
 document.getElementById('btnAgregarIntegrante').addEventListener('click', async () => {
 
