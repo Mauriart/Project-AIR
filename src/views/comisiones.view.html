@@ -198,6 +198,30 @@
         padding:1rem;
         border-radius:8px;
     ">
+    <h3>Agregar integrante</h3>
+
+<div class="form-group">
+    <label>ID Asambleísta:</label>
+    <input type="number" id="asambleistaId">
+</div>
+
+<div class="form-group">
+    <label>Rol:</label>
+
+    <select id="rolIntegrante">
+        <option value="Miembro">Miembro</option>
+        <option value="Coordinador">Coordinador</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Fecha inicio:</label>
+    <input type="date" id="fechaInicio">
+</div>
+
+<button id="btnAgregarIntegrante">
+    Agregar integrante
+</button>
 
     <h3>
         Integrantes de la comisión
@@ -223,6 +247,40 @@
         </tbody>
 
     </table>
+    <h3>Agregar integrante</h3>
+
+<div class="form-group">
+    <label>ID Asambleísta:</label>
+    <input
+        type="number"
+        id="asambleistaId">
+</div>
+
+<div class="form-group">
+    <label>Rol:</label>
+
+    <select id="rolIntegrante">
+        <option value="Coordinador">
+            Coordinador
+        </option>
+
+        <option value="Miembro">
+            Miembro
+        </option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Fecha inicio:</label>
+
+    <input
+        type="date"
+        id="fechaInicio">
+</div>
+
+<button id="btnAgregarIntegrante">
+    Agregar integrante
+</button>
 
 </div>
 
@@ -240,6 +298,8 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 });
 
 const TOKEN = sessionStorage.getItem('airToken');
+
+let comisionSeleccionada = null;
 
 function authFetch(url, options = {}) {
 
@@ -358,6 +418,8 @@ async function eliminarComision(id) {
 
 async function verIntegrantes(idComision) {
 
+    comisionSeleccionada = idComision;
+
     const res = await authFetch(`/comisiones/${idComision}/integrantes`);
 
     const data = await res.json();
@@ -397,6 +459,50 @@ async function verIntegrantes(idComision) {
 
     `).join('');
 }
+
+document.getElementById('btnAgregarIntegrante').addEventListener('click', async () => {
+
+    const asambleista_id =
+        document.getElementById('asambleistaId').value;
+
+    const rol =
+        document.getElementById('rolIntegrante').value;
+
+    const fecha_inicio =
+        document.getElementById('fechaInicio').value;
+
+    const res = await authFetch('/comisiones/integrantes', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+
+            id_comision: comisionSeleccionada,
+            asambleista_id,
+            rol,
+            fecha_inicio,
+            fecha_fin: null
+
+        })
+
+    });
+
+    if (res.ok) {
+
+        alert('Integrante agregado');
+
+        verIntegrantes(comisionSeleccionada);
+
+    } else {
+
+        alert('Error agregando integrante');
+    }
+
+});
 
 cargarComisiones();
 
