@@ -134,10 +134,21 @@ const obtenerIntegrantes = async (idComision) => {
     return result.rows;
 };
 
+const eliminarComision = async (id) => {
+
+    const query = `
+        DELETE FROM comision
+        WHERE id_comision = $1
+    `;
+
+    await db.query(query, [id]);
+};
+
 module.exports = {
     crearComision,
     listarComisiones,
     agregarIntegrante,
     registrarAsistencia,
-    obtenerIntegrantes
+    obtenerIntegrantes,
+    eliminarComision
 };

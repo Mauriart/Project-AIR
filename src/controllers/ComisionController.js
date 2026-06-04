@@ -159,4 +159,28 @@ router.post('/asistencia', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+
+    try {
+
+        await ComisionModel.eliminarComision(
+            req.params.id
+        );
+
+        res.json({
+            ok: true,
+            mensaje: 'Comisión eliminada'
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error eliminando comisión'
+        });
+    }
+});
+
 module.exports = router;
