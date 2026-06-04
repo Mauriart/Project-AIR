@@ -73,6 +73,16 @@ const agregarIntegrante = async (
     return result.rows[0];
 };
 
+const eliminarIntegrante = async (idIntegrante) => {
+
+    const query = `
+        DELETE FROM integrante_comision
+        WHERE id_integrante = $1
+    `;
+
+    await db.query(query, [idIntegrante]);
+};
+
 const registrarAsistencia = async (
     id_sesion,
     asambleista_id,
@@ -150,5 +160,6 @@ module.exports = {
     agregarIntegrante,
     registrarAsistencia,
     obtenerIntegrantes,
-    eliminarComision
+    eliminarComision,
+    eliminarIntegrante
 };

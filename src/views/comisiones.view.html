@@ -237,6 +237,7 @@
                 <th>Cédula</th>
                 <th>Rol</th>
                 <th>Estado</th>
+                <th>Acciones</th>
 
             </tr>
 
@@ -455,9 +456,51 @@ async function verIntegrantes(idComision) {
 
             <td>${i.estado}</td>
 
+            <td>
+
+                <button
+                    class="btn-peligro"
+                    onclick="eliminarIntegrante(${i.id_integrante})">
+
+                    Eliminar
+
+                </button>
+
+            </td
+
         </tr>
 
     `).join('');
+}
+
+async function eliminarIntegrante(idIntegrante) {
+
+    const confirmar =
+        confirm('¿Eliminar integrante?');
+
+    if (!confirmar) return;
+
+    const res = await authFetch(
+
+        `/comisiones/integrantes/${idIntegrante}`,
+
+        {
+            method: 'DELETE'
+        }
+
+    );
+
+    if (res.ok) {
+
+        alert('Integrante eliminado');
+
+        verIntegrantes(comisionSeleccionada);
+
+    } else {
+
+        alert('Error eliminando integrante');
+    }
+
 }
 
 document.getElementById('btnAgregarIntegrante').addEventListener('click', async () => {

@@ -185,4 +185,28 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+router.delete('/integrantes/:id', async (req, res) => {
+
+    try {
+
+        await ComisionModel.eliminarIntegrante(
+            req.params.id
+        );
+
+        res.json({
+            ok: true
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error eliminando integrante'
+        });
+    }
+
+});
+
 module.exports = router;
