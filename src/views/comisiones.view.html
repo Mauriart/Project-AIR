@@ -180,6 +180,7 @@
                 <th>Nombre</th>
                 <th>Descripción</th>
                 <th>Acciones</th>
+                <th>Integrantes</th>
             </tr>
         </thead>
 
@@ -187,6 +188,43 @@
 
         </tbody>
     </table>
+
+    <div
+    id="panelIntegrantes"
+    style="
+        display:none;
+        margin-top:2rem;
+        background:white;
+        padding:1rem;
+        border-radius:8px;
+    ">
+
+    <h3>
+        Integrantes de la comisión
+    </h3>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Rol</th>
+                <th>Estado</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tablaIntegrantesBody">
+
+        </tbody>
+
+    </table>
+
+</div>
 
 </div>
 
@@ -222,9 +260,13 @@ async function cargarComisiones() {
 
     const data = await res.json();
 
+    console.log(JSON.stringify(data, null, 2));
+
     const tbody = document.getElementById('tablaComisionesBody');
 
-    tbody.innerHTML = data.map(c => `
+    tbody.innerHTML = data.comisiones.map(c => `
+
+
 
         <tr>
             <td>${c.id_comision}</td>
@@ -232,9 +274,26 @@ async function cargarComisiones() {
             <td>${c.descripcion}</td>
 
             <td>
-                <button onclick="eliminarComision(${c.id_comision})" class="btn-peligro">
+
+                <button
+                    onclick="eliminarComision(${c.id_comision})"
+                    class="btn-peligro">
+
                     Eliminar
+
                 </button>
+
+            </td>
+
+            <td>
+
+                <button
+                    onclick="verIntegrantes(${c.id_comision})">
+
+                    Ver integrantes
+
+                </button>
+
             </td>
         </tr>
 
@@ -295,6 +354,48 @@ async function eliminarComision(id) {
 
         alert('Error al eliminar');
     }
+}
+
+async function verIntegrantes(idComision) {
+
+    const res = await authFetch(`/comisiones/${idComision}/integrantes`);
+
+    const data = await res.json();
+
+    const tbody = document.getElementById('tablaIntegrantesBody');
+
+    const panel = document.getElementById('panelIntegrantes');
+
+    panel.style.display = 'block';
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4">
+                    No hay integrantes registrados
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = data.map(i => `
+
+        <tr>
+
+            <td>${i.nombre}</td>
+
+            <td>${i.cedula}</td>
+
+            <td>${i.rol}</td>
+
+            <td>${i.estado}</td>
+
+        </tr>
+
+    `).join('');
 }
 
 cargarComisiones();
