@@ -71,6 +71,6 @@ CREATE TABLE asistencia_sesion_comision (
         REFERENCES asambleista(asambleista_id)
 );
 
-  ALTER TABLE asistencia_sesion_comision
-    ADD CONSTRAINT uq_asistencia_sesion_asambleista
-    UNIQUE (id_sesion, asambleista_id);
+ALTER TABLE asistencia_sesion_comision
+ADD CONSTRAINT uq_asistencia_sesion_asambleista
+UNIQUE (id_sesion, asambleista_id);
