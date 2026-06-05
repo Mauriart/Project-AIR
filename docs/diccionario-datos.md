@@ -322,6 +322,13 @@ Registra el número de resolución oficial que formaliza la aprobación de una p
 
 **Importancia legal:** El número de resolución es el dato que aparece en las certificaciones emitidas para carrera profesional.
 
+**Reglas de flujo implementadas en backend:**
+- Una sesión puede tener múltiples puntos de agenda, ordenados por `orden`.
+- Una propuesta no puede agregarse a la agenda si ya está en estado Aprobada o Rechazada.
+- No se permite duplicar una propuesta ni un número de orden dentro de la misma sesión.
+- Cada punto de agenda puede tener una sola resolución oficial.
+- Al registrar una resolución marcada como aprobada, la propuesta vinculada cambia automáticamente a estado Aprobada.
+
 ---
 
 ## 4. Módulo de Asambleístas (Issue #9)
