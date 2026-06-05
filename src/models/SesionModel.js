@@ -203,6 +203,16 @@ async function registrarResolucionAgenda(id_sesion, id_punto_agenda, datos) {
       throw new Error('Punto de agenda no encontrado para esta sesion');
     }
 
+    const resolucionExistente = await client.query(`
+      SELECT id_resolucion_propuesta
+      FROM resolucion_propuesta
+      WHERE id_punto_agenda = $1
+    `, [id_punto_agenda]);
+
+    if (resolucionExistente.rows.length > 0) {
+      throw new Error('Este punto de agenda ya tiene una resolucion registrada');
+    }
+
     const resolucion = await client.query(`
       INSERT INTO resolucion_propuesta
         (id_punto_agenda, numero_resolucion, fecha_emision)
