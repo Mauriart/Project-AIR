@@ -104,6 +104,13 @@ router.post('/integrantes', requiereGestionComisiones, async (req, res) => {
     fecha_fin
   } = req.body;
 
+  if (!id_comision || !asambleista_id || !rol || !fecha_inicio) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'Faltan campos obligatorios: id_comision, asambleista_id, rol, fecha_inicio'
+    });
+  }
+
   try {
 
     const integrante =
@@ -140,6 +147,13 @@ router.post('/asistencia', requiereGestionComisiones, async (req, res) => {
     asambleista_id,
     estado_asistencia
   } = req.body;
+
+  if (!id_sesion || !asambleista_id || !estado_asistencia) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'Faltan campos obligatorios: id_sesion, asambleista_id, estado_asistencia'
+    });
+  }
 
   try {
 
@@ -222,6 +236,13 @@ router.put('/integrantes/:id', requiereGestionComisiones, async (req, res) => {
         fecha_fin
     } = req.body;
 
+    if (!rol || !estado) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'Faltan campos obligatorios: rol, estado'
+        });
+    }
+
     try {
 
         const integrante =
@@ -253,6 +274,13 @@ router.put('/integrantes/:id', requiereGestionComisiones, async (req, res) => {
 router.post('/:id/sesiones', requiereGestionComisiones, async (req, res) => {
 
     const { fecha, descripcion } = req.body;
+
+    if (!fecha) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'La fecha de la sesión es requerida'
+        });
+    }
 
     try {
 
@@ -329,6 +357,13 @@ router.post('/sesiones/:id/asistencia', requiereGestionComisiones, async (req, r
         asambleista_id,
         estado_asistencia
     } = req.body;
+
+    if (!asambleista_id || !estado_asistencia) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'Faltan campos obligatorios: asambleista_id, estado_asistencia'
+        });
+    }
 
     try {
 
