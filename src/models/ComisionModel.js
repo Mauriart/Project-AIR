@@ -113,6 +113,17 @@ const registrarAsistencia = async (
     return result.rows[0];
 };
 
+const obtenerAsistenciaSesion = async (idSesion) => {
+    const query = `
+        SELECT asambleista_id, estado_asistencia
+        FROM asistencia_sesion_comision
+        WHERE id_sesion = $1;
+    `;
+
+    const result = await db.query(query, [idSesion]);
+    return result.rows;
+};
+
 const actualizarIntegrante = async (
     idIntegrante,
     rol,
@@ -248,5 +259,6 @@ module.exports = {
     actualizarIntegrante,
     crearSesion,
     listarSesiones,
-    eliminarSesion
+    eliminarSesion,
+    obtenerAsistenciaSesion
 };

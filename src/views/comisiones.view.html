@@ -470,6 +470,12 @@ async function abrirAsistencia(idSesion) {
         document.getElementById(
             'panelAsistencia'
         );
+    
+    const resAsistencia = await authFetch(
+        `/comisiones/sesiones/${idSesion}/asistencia`
+    );
+
+    const asistenciaGuardada = await resAsistencia.json();
 
     const tbody =
         document.getElementById(
@@ -492,15 +498,15 @@ async function abrirAsistencia(idSesion) {
                     <select
                         id="estado_${i.asambleista_id}">
 
-                        <option value="Presente">
+                        <option value="Presente" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Presente') ? 'selected' : ''}>
                             Presente
                         </option>
 
-                        <option value="Ausente">
+                        <option value="Ausente" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Ausente') ? 'selected' : ''}>
                             Ausente
                         </option>
 
-                        <option value="Justificado">
+                        <option value="Justificado" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Justificado') ? 'selected' : ''}>
                             Justificado
                         </option>
 

@@ -350,4 +350,26 @@ router.post('/sesiones/:id/asistencia', async (req, res) => {
     }
 });
 
+router.get('/sesiones/:id/asistencia', async (req, res) => {
+
+    try {
+
+        const asistencia =
+            await ComisionModel.obtenerAsistenciaSesion(
+                req.params.id
+            );
+
+        res.json(asistencia);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error obteniendo asistencia'
+        });
+    }
+});
+
 module.exports = router;
