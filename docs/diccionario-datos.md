@@ -466,5 +466,5 @@ Vista que consolida la información de asambleístas con su nombramiento activo,
 
 ---
 
-*Documento generado para el Sprint 2 del Sistema de Gestión Legislativa AIR — TEC*  
+*Documento del Sprint 2 del Sistema de Gestión Legislativa AIR — TEC*  
 *Última actualización: Mayo 2026*
