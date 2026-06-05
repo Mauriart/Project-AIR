@@ -193,7 +193,6 @@ const obtenerPorcentajeAsistencia = async (idComision) => {
             AND sc.id_comision = ic.id_comision
 
         WHERE ic.id_comision = $1
-          AND sc.id_comision = $1
 
         GROUP BY
             a.asambleista_id,
