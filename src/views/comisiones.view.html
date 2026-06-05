@@ -290,7 +290,7 @@
 
     <h3>Sesiones de la comisión</h3>
 
-    <input type="date" id="fechaSesion">
+    <input type="datetime-local" id="fechaSesion">
 
     <input type="text" id="descripcionSesion">
 
@@ -571,7 +571,10 @@ async function cargarSesiones(idComision) {
 
         <tr>
 
-            <td>${s.fecha}</td>
+            <td>
+                ${new Date(s.fecha)
+                    .toLocaleString()}
+            </td>
 
             <td>${s.descripcion || ''}</td>
 
