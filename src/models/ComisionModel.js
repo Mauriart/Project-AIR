@@ -184,6 +184,57 @@ const eliminarComision = async (id) => {
     await db.query(query, [id]);
 };
 
+const crearSesion = async (
+    idComision,
+    fecha,
+    descripcion
+) => {
+
+    const query = `
+        INSERT INTO sesion_comision (
+            id_comision,
+            fecha,
+            descripcion
+        )
+        VALUES ($1, $2, $3)
+        RETURNING *;
+    `;
+
+    const result = await db.query(
+        query,
+        [idComision, fecha, descripcion]
+    );
+
+    return result.rows[0];
+};
+
+const listarSesiones = async (idComision) => {
+
+    const query = `
+        SELECT *
+        FROM sesion_comision
+        WHERE id_comision = $1
+        ORDER BY fecha DESC;
+    `;
+
+    const result = await db.query(
+        query,
+        [idComision]
+    );
+
+    return result.rows;
+};
+
+const eliminarSesion = async (idSesion) => {
+
+    const query = `
+        DELETE FROM sesion_comision
+        WHERE id_sesion = $1
+    `;
+
+    await db.query(query, [idSesion]);
+};
+
 module.exports = {
     crearComision,
     listarComisiones,
@@ -192,5 +243,8 @@ module.exports = {
     obtenerIntegrantes,
     eliminarComision,
     eliminarIntegrante,
-    actualizarIntegrante
+    actualizarIntegrante,
+    crearSesion,
+    listarSesiones,
+    eliminarSesion
 };

@@ -535,6 +535,65 @@ async function verIntegrantes(idComision) {
         </tr>
 
     `).join('');
+    
+    cargarSesiones(idComision);
+}
+
+
+async function cargarSesiones(idComision) {
+
+    const res =
+        await authFetch(
+            `/comisiones/${idComision}/sesiones`
+        );
+
+    const data = await res.json();
+
+    const tbody =
+        document.getElementById(
+            'tablaSesionesBody'
+        );
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    No hay sesiones registradas
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = data.map(s => `
+
+        <tr>
+
+            <td>${s.fecha}</td>
+
+            <td>${s.descripcion || ''}</td>
+
+            <td>
+
+                <button>
+                    Registrar asistencia
+                </button>
+
+                <button
+                    class="btn-peligro"
+                    onclick="eliminarSesion(${s.id_sesion})">
+
+                    Eliminar
+
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join('');
 }
 
 async function eliminarIntegrante(idIntegrante) {
@@ -565,6 +624,35 @@ async function eliminarIntegrante(idIntegrante) {
         alert('Error eliminando integrante');
     }
 
+}
+async function eliminarSesion(idSesion) {
+
+    const confirmar =
+        confirm(
+            '¿Eliminar sesión?'
+        );
+
+    if (!confirmar) return;
+
+    const res = await authFetch(
+        `/comisiones/sesiones/${idSesion}`,
+        {
+            method: 'DELETE'
+        }
+    );
+
+    if (res.ok) {
+
+        cargarSesiones(
+            comisionSeleccionada
+        );
+
+    } else {
+
+        alert(
+            'Error eliminando sesión'
+        );
+    }
 }
 
 function editarIntegrante(
@@ -688,6 +776,64 @@ document
 
     }
 );
+
+document
+.getElementById('btnCrearSesion')
+.addEventListener('click', async () => {
+
+    const fecha =
+        document.getElementById(
+            'fechaSesion'
+        ).value;
+
+    const descripcion =
+        document.getElementById(
+            'descripcionSesion'
+        ).value;
+
+    if (!fecha) {
+
+        alert('Seleccione una fecha');
+
+        return;
+    }
+
+    const res = await authFetch(
+        `/comisiones/${comisionSeleccionada}/sesiones`,
+        {
+            method: 'POST',
+
+            headers: {
+                'Content-Type':
+                    'application/json'
+            },
+
+            body: JSON.stringify({
+                fecha,
+                descripcion
+            })
+        }
+    );
+
+    if (res.ok) {
+
+        cargarSesiones(
+            comisionSeleccionada
+        );
+
+        document.getElementById(
+            'fechaSesion'
+        ).value = '';
+
+        document.getElementById(
+            'descripcionSesion'
+        ).value = '';
+
+    } else {
+
+        alert('Error creando sesión');
+    }
+});
 
 document.getElementById('btnAgregarIntegrante').addEventListener('click', async () => {
 

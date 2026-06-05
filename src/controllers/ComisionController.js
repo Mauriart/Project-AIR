@@ -245,4 +245,77 @@ router.put('/integrantes/:id', async (req, res) => {
 
 });
 
+router.post('/:id/sesiones', async (req, res) => {
+
+    const { fecha, descripcion } = req.body;
+
+    try {
+
+        const sesion =
+            await ComisionModel.crearSesion(
+                req.params.id,
+                fecha,
+                descripcion
+            );
+
+        res.status(201).json({
+            ok: true,
+            sesion
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error creando sesión'
+        });
+    }
+});
+
+router.get('/:id/sesiones', async (req, res) => {
+
+    try {
+
+        const sesiones =
+            await ComisionModel.listarSesiones(
+                req.params.id
+            );
+
+        res.json(sesiones);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error obteniendo sesiones'
+        });
+    }
+});
+
+router.delete('/sesiones/:id', async (req, res) => {
+
+    try {
+
+        await ComisionModel.eliminarSesion(
+            req.params.id
+        );
+
+        res.json({
+            ok: true
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false
+        });
+    }
+});
+
 module.exports = router;
