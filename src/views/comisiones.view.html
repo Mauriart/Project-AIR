@@ -644,7 +644,9 @@ document.getElementById('btnCrearComision').addEventListener('click', async () =
 
 async function eliminarComision(id) {
 
-    const confirmar = confirm('¿Eliminar comisión?');
+    const confirmar = confirm(
+        'Esta acción eliminará la comisión, sus integrantes, sesiones y asistencias registradas. ¿Desea continuar?'
+    );
 
     if (!confirmar) return;
 

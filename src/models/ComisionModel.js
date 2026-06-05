@@ -158,7 +158,7 @@ const obtenerPorcentajeAsistencia = async (idComision) => {
             a.nombre,
             a.cedula,
 
-            COUNT(sc.id_sesion) AS total_sesiones,
+            COUNT(ascg.id_asistencia) AS total_registros,
 
             COUNT(
                 CASE
@@ -175,7 +175,7 @@ const obtenerPorcentajeAsistencia = async (idComision) => {
                             THEN 1
                         END
                     )::numeric
-                    / NULLIF(COUNT(sc.id_sesion), 0)
+                    / NULLIF(COUNT(ascg.id_asistencia), 0)
                 ) * 100,
                 2
             ) AS porcentaje_asistencia
@@ -185,14 +185,15 @@ const obtenerPorcentajeAsistencia = async (idComision) => {
         INNER JOIN asambleista a
             ON ic.asambleista_id = a.asambleista_id
 
-        LEFT JOIN sesion_comision sc
-            ON sc.id_comision = ic.id_comision
-
         LEFT JOIN asistencia_sesion_comision ascg
-            ON ascg.id_sesion = sc.id_sesion
-            AND ascg.asambleista_id = ic.asambleista_id
+            ON ascg.asambleista_id = ic.asambleista_id
+
+        LEFT JOIN sesion_comision sc
+            ON sc.id_sesion = ascg.id_sesion
+            AND sc.id_comision = ic.id_comision
 
         WHERE ic.id_comision = $1
+          AND sc.id_comision = $1
 
         GROUP BY
             a.asambleista_id,
@@ -272,12 +273,59 @@ const obtenerIntegrantes = async (idComision) => {
 
 const eliminarComision = async (id) => {
 
-    const query = `
-        DELETE FROM comision
-        WHERE id_comision = $1
-    `;
+    const client = await db.connect();
 
-    await db.query(query, [id]);
+    try {
+
+        await client.query('BEGIN');
+
+        await client.query(
+            `
+            DELETE FROM asistencia_sesion_comision
+            WHERE id_sesion IN (
+                SELECT id_sesion
+                FROM sesion_comision
+                WHERE id_comision = $1
+            );
+            `,
+            [id]
+        );
+
+        await client.query(
+            `
+            DELETE FROM sesion_comision
+            WHERE id_comision = $1;
+            `,
+            [id]
+        );
+
+        await client.query(
+            `
+            DELETE FROM integrante_comision
+            WHERE id_comision = $1;
+            `,
+            [id]
+        );
+
+        await client.query(
+            `
+            DELETE FROM comision
+            WHERE id_comision = $1;
+            `,
+            [id]
+        );
+
+        await client.query('COMMIT');
+
+    } catch (error) {
+
+        await client.query('ROLLBACK');
+        throw error;
+
+    } finally {
+
+        client.release();
+    }
 };
 
 const crearSesion = async (
