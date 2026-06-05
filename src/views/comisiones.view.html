@@ -495,18 +495,34 @@ async function abrirAsistencia(idSesion) {
 
                 <td>
 
-                    <select
-                        id="estado_${i.asambleista_id}">
+                    <select id="estado_${i.asambleista_id}">
+                        <option
+                            value="Presente"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Presente'
+                            ) ? 'selected' : ''}>
 
-                        <option value="Presente" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Presente') ? 'selected' : ''}>
                             Presente
                         </option>
 
-                        <option value="Ausente" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Ausente') ? 'selected' : ''}>
+                        <option
+                            value="Ausente"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Ausente'
+                            ) ? 'selected' : ''}>
+
                             Ausente
                         </option>
 
-                        <option value="Justificado" ${asistenciaGuardada.find(a => a.asambleista_id === i.asambleista_id && a.estado_asistencia === 'Justificado') ? 'selected' : ''}>
+                        <option
+                            value="Justificado"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Justificado'
+                            ) ? 'selected' : ''}>
+
                             Justificado
                         </option>
 

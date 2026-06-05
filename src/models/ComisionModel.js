@@ -114,13 +114,17 @@ const registrarAsistencia = async (
 };
 
 const obtenerAsistenciaSesion = async (idSesion) => {
+
     const query = `
-        SELECT asambleista_id, estado_asistencia
+        SELECT
+            asambleista_id,
+            estado_asistencia
         FROM asistencia_sesion_comision
         WHERE id_sesion = $1;
     `;
 
     const result = await db.query(query, [idSesion]);
+
     return result.rows;
 };
 
