@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 const { verificarAutenticacion, requierePermiso } = require('./src/controllers/AuthController');
 const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
+const comisionRoutes = require('./src/controllers/ComisionController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
 const asambleistaController = require('./src/controllers/asambleistaController');
 const sesionRoutes = require('./src/controllers/SesionController');
@@ -22,6 +23,7 @@ const votacionRoutes = require('./src/controllers/VotacionController');
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
+app.use('/comisiones', comisionRoutes);
 app.use('/certificaciones', certificacionRoutes);
 app.use('/sesiones', sesionRoutes);
 app.use('/votaciones', votacionRoutes);
@@ -55,6 +57,16 @@ app.get('/login', (req, res) => {
 
 app.get('/buscador', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
+});
+
+app.get('/vista-comisiones', (req, res) => {
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      'src/views/comisiones.view.html'
+    )
+  );
 });
 
 app.get('/asambleistas', (req, res) => {
