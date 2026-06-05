@@ -410,9 +410,14 @@
       window.location.href = '/login';
     });
 
-    document.getElementById('fecha').valueAsDate = new Date();
-    await cargarCatalogos();
-    await refrescarTodo();
+    try {
+      document.getElementById('fecha').valueAsDate = new Date();
+      await cargarCatalogos();
+      await refrescarTodo();
+    } catch (error) {
+      console.error(error);
+      mostrarAlerta('error', 'No se pudo cargar la gestion de sesiones.');
+    }
   });
 
   function headersJson() {
@@ -665,7 +670,7 @@
     return `
       <div class="resolution-form">
         <input id="res-num-${punto.id_punto_agenda}" maxlength="20" placeholder="AIR-000">
-        <input id="res-fecha-${punto.id_punto_agenda}" type="date">
+        <input id="res-fecha-${punto.id_punto_agenda}" type="date" value="${new Date().toISOString().slice(0, 10)}">
         <label class="checkline">
           <input id="res-aprobada-${punto.id_punto_agenda}" type="checkbox" checked>
           Aprobada
