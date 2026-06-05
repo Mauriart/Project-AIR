@@ -258,7 +258,7 @@
 
     <h1>Gestión de Comisiones</h1>
 
-    <h2>📋 Crear Comisión</h2>
+    <h2>Crear Comisión</h2>
 
     <div class="form-group">
         <label>Nombre:</label>
@@ -278,7 +278,7 @@
 
 <div class="seccion">
 
-    <h2>👥 Listado de Comisiones</h2>
+    <h2>Listado de Comisiones</h2>
 
     <table>
         <thead>
@@ -521,6 +521,16 @@ let comisionSeleccionada = null;
 
 let sesionSeleccionada = null;
 
+function escapeHtml(value) {
+
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function authFetch(url, options = {}) {
 
     return fetch(url, {
@@ -540,8 +550,6 @@ async function cargarComisiones() {
 
     const data = await res.json();
 
-    console.log(JSON.stringify(data, null, 2));
-
     const tbody = document.getElementById('tablaComisionesBody');
 
     tbody.innerHTML = data.comisiones.map(c => `
@@ -550,8 +558,8 @@ async function cargarComisiones() {
 
         <tr>
             <td>${c.id_comision}</td>
-            <td>${c.nombre}</td>
-            <td>${c.descripcion}</td>
+            <td>${escapeHtml(c.nombre)}</td>
+            <td>${escapeHtml(c.descripcion || '')}</td>
 
             <td>
 
@@ -613,9 +621,9 @@ async function abrirAsistencia(idSesion) {
 
             <tr>
 
-                <td>${i.nombre}</td>
+                <td>${escapeHtml(i.nombre)}</td>
 
-                <td>${i.cedula}</td>
+                <td>${escapeHtml(i.cedula)}</td>
 
                 <td>
 
@@ -803,13 +811,13 @@ async function verIntegrantes(idComision) {
 
         <tr>
 
-            <td>${i.nombre}</td>
+            <td>${escapeHtml(i.nombre)}</td>
 
-            <td>${i.cedula}</td>
+            <td>${escapeHtml(i.cedula)}</td>
 
-            <td>${i.rol}</td>
+            <td>${escapeHtml(i.rol)}</td>
 
-            <td>${i.estado}</td>
+            <td>${escapeHtml(i.estado)}</td>
 
             <td>
 
@@ -879,7 +887,7 @@ async function cargarSesiones(idComision) {
                 ${new Date(s.fecha).toLocaleString('es-CR')}
             </td>
 
-            <td>${s.descripcion || ''}</td>
+            <td>${escapeHtml(s.descripcion || '')}</td>
 
             <td>
 
@@ -977,8 +985,8 @@ async function cargarPorcentajes(idComision) {
     tbody.innerHTML = data.map(p => `
 
         <tr>
-            <td>${p.nombre}</td>
-            <td>${p.cedula}</td>
+            <td>${escapeHtml(p.nombre)}</td>
+            <td>${escapeHtml(p.cedula)}</td>
             <td>${p.total_presentes || 0}</td>
             <td>${p.total_registros || 0}</td>
             <td>${p.porcentaje_asistencia || 0}%</td>
