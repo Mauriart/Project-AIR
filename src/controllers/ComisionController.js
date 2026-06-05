@@ -372,4 +372,26 @@ router.get('/sesiones/:id/asistencia', async (req, res) => {
     }
 });
 
+router.get('/:id/porcentaje-asistencia', async (req, res) => {
+
+    try {
+
+        const porcentaje =
+            await ComisionModel.obtenerPorcentajeAsistencia(
+                req.params.id
+            );
+
+        res.json(porcentaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error calculando porcentaje de asistencia'
+        });
+    }
+});
+
 module.exports = router;

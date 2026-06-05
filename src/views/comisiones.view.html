@@ -346,6 +346,23 @@
 
     </table>
 
+    <h3>Porcentaje de asistencia</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Presentes</th>
+                <th>Total</th>
+                <th>Porcentaje</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaPorcentajeBody">
+        </tbody>
+    </table>
+
     <br>
 
     <button id="btnGuardarAsistencia">
@@ -586,6 +603,8 @@ async function guardarAsistencia() {
     alert(
         'Asistencia registrada'
     );
+
+    cargarPorcentajes(comisionSeleccionada);
 }
 
 document.getElementById('btnCrearComision').addEventListener('click', async () => {
@@ -711,6 +730,8 @@ async function verIntegrantes(idComision) {
     `).join('');
     
     cargarSesiones(idComision);
+
+    cargarPorcentajes(idComision);
 }
 
 
@@ -832,6 +853,29 @@ async function eliminarSesion(idSesion) {
             'Error eliminando sesión'
         );
     }
+}
+
+async function cargarPorcentajes(idComision) {
+
+    const res = await authFetch(
+        `/comisiones/${idComision}/porcentaje-asistencia`
+    );
+
+    const data = await res.json();
+
+    const tbody = document.getElementById('tablaPorcentajeBody');
+
+    tbody.innerHTML = data.map(p => `
+
+        <tr>
+            <td>${p.nombre}</td>
+            <td>${p.cedula}</td>
+            <td>${p.total_presentes || 0}</td>
+            <td>${p.total_registros || 0}</td>
+            <td>${p.porcentaje_asistencia || 0}%</td>
+        </tr>
+
+    `).join('');
 }
 
 function editarIntegrante(

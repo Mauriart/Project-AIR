@@ -128,6 +128,53 @@ const obtenerAsistenciaSesion = async (idSesion) => {
     return result.rows;
 };
 
+const obtenerPorcentajeAsistencia = async (idComision) => {
+
+    const query = `
+        SELECT
+            a.asambleista_id,
+            a.nombre,
+            a.cedula,
+            COUNT(ascm.id_asistencia) AS total_registros,
+            SUM(
+                CASE
+                    WHEN ascm.estado_asistencia = 'Presente' THEN 1
+                    ELSE 0
+                END
+            ) AS total_presentes,
+            ROUND(
+                (
+                    SUM(
+                        CASE
+                            WHEN ascm.estado_asistencia = 'Presente' THEN 1
+                            ELSE 0
+                        END
+                    )::numeric
+                    / NULLIF(COUNT(ascm.id_asistencia), 0)
+                ) * 100,
+                2
+            ) AS porcentaje_asistencia
+        FROM integrante_comision ic
+        INNER JOIN asambleista a
+            ON ic.asambleista_id = a.asambleista_id
+        LEFT JOIN asistencia_sesion_comision ascm
+            ON ascm.asambleista_id = a.asambleista_id
+        LEFT JOIN sesion_comision sc
+            ON ascm.id_sesion = sc.id_sesion
+            AND sc.id_comision = ic.id_comision
+        WHERE ic.id_comision = $1
+        GROUP BY
+            a.asambleista_id,
+            a.nombre,
+            a.cedula
+        ORDER BY a.nombre;
+    `;
+
+    const result = await db.query(query, [idComision]);
+
+    return result.rows;
+};
+
 const actualizarIntegrante = async (
     idIntegrante,
     rol,
@@ -264,5 +311,6 @@ module.exports = {
     crearSesion,
     listarSesiones,
     eliminarSesion,
-    obtenerAsistenciaSesion
+    obtenerAsistenciaSesion,
+    obtenerPorcentajeAsistencia
 };
