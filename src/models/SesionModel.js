@@ -167,6 +167,17 @@ async function agregarPuntoAgenda(id_sesion, datos) {
       throw new Error('La propuesta ya esta en la agenda de esta sesion');
     }
 
+    const ordenDuplicado = await client.query(`
+      SELECT id_punto_agenda
+      FROM punto_agenda
+      WHERE id_sesion = $1
+        AND orden = $2
+    `, [id_sesion, orden]);
+
+    if (ordenDuplicado.rows.length > 0) {
+      throw new Error('Ya existe un punto con ese orden en esta sesion');
+    }
+
     const punto = await client.query(`
       INSERT INTO punto_agenda (id_sesion, id_propuesta, orden, descripcion)
       VALUES ($1, $2, $3, $4)
