@@ -318,4 +318,36 @@ router.delete('/sesiones/:id', async (req, res) => {
     }
 });
 
+router.post('/sesiones/:id/asistencia', async (req, res) => {
+
+    const {
+        asambleista_id,
+        estado_asistencia
+    } = req.body;
+
+    try {
+
+        const asistencia =
+            await ComisionModel.registrarAsistencia(
+                req.params.id,
+                asambleista_id,
+                estado_asistencia
+            );
+
+        res.status(201).json({
+            ok: true,
+            asistencia
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error registrando asistencia'
+        });
+    }
+});
+
 module.exports = router;

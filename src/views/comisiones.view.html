@@ -314,6 +314,46 @@
 
 </table>
 
+<div
+    id="panelAsistencia"
+    style="
+        display:none;
+        margin-top:2rem;
+        background:white;
+        padding:1rem;
+        border-radius:8px;
+    ">
+
+    <h3>Registro de asistencia</h3>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Asistencia</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tablaAsistenciaBody">
+
+        </tbody>
+
+    </table>
+
+    <br>
+
+    <button id="btnGuardarAsistencia">
+        Guardar asistencia
+    </button>
+
+</div>
+
     <table>
 
         <thead>
@@ -354,6 +394,8 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 const TOKEN = sessionStorage.getItem('airToken');
 
 let comisionSeleccionada = null;
+
+let sesionSeleccionada = null;
 
 function authFetch(url, options = {}) {
 
@@ -412,6 +454,116 @@ async function cargarComisiones() {
         </tr>
 
     `).join('');
+}
+
+async function abrirAsistencia(idSesion) {
+
+    sesionSeleccionada = idSesion;
+
+    const res = await authFetch(
+        `/comisiones/${comisionSeleccionada}/integrantes`
+    );
+
+    const integrantes = await res.json();
+
+    const panel =
+        document.getElementById(
+            'panelAsistencia'
+        );
+
+    const tbody =
+        document.getElementById(
+            'tablaAsistenciaBody'
+        );
+
+    panel.style.display = 'block';
+
+    tbody.innerHTML =
+        integrantes.map(i => `
+
+            <tr>
+
+                <td>${i.nombre}</td>
+
+                <td>${i.cedula}</td>
+
+                <td>
+
+                    <select
+                        id="estado_${i.asambleista_id}">
+
+                        <option value="Presente">
+                            Presente
+                        </option>
+
+                        <option value="Ausente">
+                            Ausente
+                        </option>
+
+                        <option value="Justificado">
+                            Justificado
+                        </option>
+
+                    </select>
+
+                </td>
+
+            </tr>
+
+        `).join('');
+}
+
+document
+.getElementById('btnGuardarAsistencia')
+.addEventListener('click', guardarAsistencia);
+
+async function guardarAsistencia() {
+
+    const filas =
+        document.querySelectorAll(
+            '#tablaAsistenciaBody tr'
+        );
+
+    for (const fila of filas) {
+
+        const select =
+            fila.querySelector('select');
+
+        const asambleistaId =
+            select.id.replace(
+                'estado_',
+                ''
+            );
+
+        const estado =
+            select.value;
+
+        const res = await authFetch(
+            `/comisiones/sesiones/${sesionSeleccionada}/asistencia`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    asambleista_id: asambleistaId,
+                    estado_asistencia: estado
+                })
+            }
+        );
+
+        console.log(
+            asambleistaId,
+            estado,
+            res.status
+        );
+    }
+
+    alert(
+        'Asistencia registrada'
+    );
 }
 
 document.getElementById('btnCrearComision').addEventListener('click', async () => {
@@ -572,16 +724,18 @@ async function cargarSesiones(idComision) {
         <tr>
 
             <td>
-                ${new Date(s.fecha)
-                    .toLocaleString()}
+                ${new Date(s.fecha).toLocaleString('es-CR')}
             </td>
 
             <td>${s.descripcion || ''}</td>
 
             <td>
 
-                <button>
+                <button
+                    onclick="abrirAsistencia(${s.id_sesion})">
+
                     Registrar asistencia
+
                 </button>
 
                 <button
@@ -785,9 +939,9 @@ document
 .addEventListener('click', async () => {
 
     const fecha =
-        document.getElementById(
-            'fechaSesion'
-        ).value;
+        document.getElementById('fechaSesion').value;
+
+    console.log('Fecha enviada:', fecha);
 
     const descripcion =
         document.getElementById(

@@ -96,6 +96,9 @@ const registrarAsistencia = async (
             estado_asistencia
         )
         VALUES ($1, $2, $3)
+        ON CONFLICT (id_sesion, asambleista_id)
+        DO UPDATE SET
+            estado_asistencia = EXCLUDED.estado_asistencia
         RETURNING *;
     `;
 
@@ -105,8 +108,7 @@ const registrarAsistencia = async (
         estado_asistencia
     ];
 
-    const result =
-    await db.query(query, values);
+    const result = await db.query(query, values);
 
     return result.rows[0];
 };

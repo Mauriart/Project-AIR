@@ -44,7 +44,7 @@ CREATE TABLE sesion_comision (
 
     id_comision INTEGER NOT NULL,
 
-    fecha DATE NOT NULL,
+    fecha TIMESTAMP NOT NULL,
 
     descripcion TEXT,
 
@@ -70,3 +70,7 @@ CREATE TABLE asistencia_sesion_comision (
         FOREIGN KEY (asambleista_id)
         REFERENCES asambleista(asambleista_id)
 );
+
+  ALTER TABLE asistencia_sesion_comision
+    ADD CONSTRAINT uq_asistencia_sesion_asambleista
+    UNIQUE (id_sesion, asambleista_id);
