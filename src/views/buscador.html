@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión y Búsqueda de Asambleístas - AIR</title>
     <style>
-        /* ========== ESTILOS GENERALES ========== */
+        /* Estilos generales */
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
@@ -170,16 +170,16 @@
         <a href="/propuesta-nueva">Propuestas</a>
         <a href="/preview-certificacion">Certificaciones</a>
         <a href="/vista-comisiones">Comisiones</a>
+        <a href="/asistencia">Sesiones</a>
+        <a href="/votaciones-tablero">Votaciones</a>
         <button type="button" id="logoutBtn">Salir</button>
     </div>
 </nav>
 
-<!-- ========================================================= -->
-<!-- SECCIÓN 1: ISSUE #3 – BUSCADOR Y CONSULTA (Jimena)        -->
-<!-- ========================================================= -->
+<!-- Buscador y consulta -->
 <div class="seccion">
     <h1>Certificaciones AIR</h1>
-    <h2>🔍 Buscador de Asambleísta (Issue #3)</h2>
+    <h2>Buscador de Asambleísta</h2>
 
     <div class="form-group">
         <label>Asambleísta (nombre o cédula):</label>
@@ -216,13 +216,9 @@
 
 <hr>
 
-<!-- ========================================================= -->
-<!-- SECCIÓN 2: COLABORACIÓN – GESTIÓN DE ASAMBLEÍSTAS Y       -->
-<!-- NOMBRAMIENTOS (apoyo al equipo, no parte del Issue #3)   -->
-<!-- ========================================================= -->
+<!-- Gestion de asambleistas y nombramientos -->
 <div class="seccion">
-    <h2>📋 Administración de Asambleístas y Nombramientos</h2>
-    <p><em>Colaboración – Funcionalidad para completar requisitos del equipo.</em></p>
+    <h2>Administración de Asambleístas y Nombramientos</h2>
 
     <!-- Listado de asambleístas -->
     <div id="listadoContainer">
@@ -321,9 +317,7 @@
         document.getElementById('guardarNombramientoBtn').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
     }
 
-    // =========================================================
-    // 1. ISSUE #3 – LÓGICA DEL BUSCADOR (Jimena)
-    // =========================================================
+    // Lógica del buscador
     let asambleistaSeleccionado = null;
 
     async function buscarAsambleistas(termino) {
@@ -404,9 +398,7 @@
         document.getElementById('resultadoConsulta').style.display = 'block';
     });
 
-    // =========================================================
-    // 2. COLABORACIÓN – CRUD de asambleístas y nombramientos
-    // =========================================================
+    // CRUD de asambleístas y nombramientos
     let asambleistaActualId = null;   // ID del asambleísta que se está editando
 
     // Cargar listado de asambleístas

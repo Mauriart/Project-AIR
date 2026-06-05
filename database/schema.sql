@@ -850,6 +850,50 @@ BEFORE UPDATE ON votacion_acuerdo
 FOR EACH ROW
 EXECUTE FUNCTION fn_no_modificar_votacion_firme();
 
+-- Función que calcula el resultado de una votación
+-- tipo_mayoria: 1 = Simple, 2 = Calificada
+CREATE OR REPLACE FUNCTION calcular_resultado_votacion(
+    p_votos_favor  INT,
+    p_votos_contra INT,
+    p_id_sesion    INT,
+    p_id_tipo_mayoria INT
+)
+RETURNS VARCHAR AS $$
+DECLARE
+    v_total_presentes INT;
+    v_umbral          NUMERIC;
+BEGIN
+    -- Obtener total de presentes en la sesión
+    SELECT COUNT(*) INTO v_total_presentes
+    FROM asistencia_sesion_plenaria asp
+    JOIN catalogo_estado_asistencia cea
+        ON asp.id_estado_asistencia = cea.id_estado_asistencia
+    WHERE asp.id_sesion = p_id_sesion
+      AND cea.nombre = 'Presente';
+
+    -- Mayoría Simple: votos_favor > votos_contra
+    IF p_id_tipo_mayoria = 1 THEN
+        IF p_votos_favor > p_votos_contra THEN
+            RETURN 'Aprobada';
+        ELSE
+            RETURN 'Rechazada';
+        END IF;
+    END IF;
+
+    -- Mayoría Calificada: votos_favor >= 66% de presentes
+    IF p_id_tipo_mayoria = 2 THEN
+        v_umbral := CEIL(v_total_presentes * 0.66);
+        IF p_votos_favor >= v_umbral THEN
+            RETURN 'Aprobada';
+        ELSE
+            RETURN 'Rechazada';
+        END IF;
+    END IF;
+
+    RETURN 'Rechazada';
+END;
+$$ LANGUAGE plpgsql;
+
 -- =========================================
 -- SPRINT 3: Issue #13 — Anulación de certificaciones
 -- =========================================
