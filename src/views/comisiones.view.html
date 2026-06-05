@@ -6,77 +6,146 @@
     <title>Comisiones AIR</title>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 1rem;
-            background-color: #f9f9f9;
+        * {
+            box-sizing: border-box;
         }
 
-        h1, h2, h3 {
-            color: #1a3e60;
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6f8;
+            color: #172033;
+        }
+
+        body > .seccion,
+        body > div.seccion + div.seccion {
+            width: min(100% - 2rem, 1160px);
+            margin: 1rem auto;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            color: #172033;
+            font-size: 1.7rem;
+            font-weight: 650;
+        }
+
+        h2 {
+            margin: 0 0 1rem;
+            color: #344256;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        h3 {
+            margin: 1.25rem 0 .75rem;
+            color: #344256;
+            font-size: 1rem;
+            font-weight: 650;
         }
 
         button {
-            background-color: #2c7da0;
+            min-height: 36px;
+            background: #12344d;
             color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            border: 1px solid #12344d;
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
             cursor: pointer;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 650;
         }
 
         button:hover {
-            background-color: #1f5e7a;
+            background: #0c2639;
         }
 
         .btn-peligro {
-            background-color: #a11d33;
+            background: #a33a3a;
+            border-color: #a33a3a;
         }
 
         .btn-peligro:hover {
-            background-color: #7a1628;
+            background: #832525;
         }
 
         .seccion {
-            background-color: white;
-            padding: 1rem;
+            background: white;
+            padding: 1.5rem;
+            border: 1px solid #dde3ea;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            box-shadow: 0 1px 6px rgba(19, 35, 51, 0.06);
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 160px minmax(220px, 360px);
+            gap: .75rem;
+            align-items: center;
+            margin-bottom: .85rem;
         }
 
         label {
-            font-weight: bold;
-            display: inline-block;
-            width: 140px;
+            color: #344256;
+            font-weight: 650;
+            font-size: .9rem;
         }
 
-        input, select {
-            padding: 0.4rem;
-            width: 250px;
+        input,
+        select {
+            width: 100%;
+            min-height: 38px;
+            padding: 0.5rem 0.65rem;
+            border: 1.5px solid #ccd5df;
+            border-radius: 6px;
+            font: inherit;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #2c7da0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
-            background-color: white;
+            background: white;
         }
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 0.6rem;
+        th,
+        td {
+            border-bottom: 1px solid #e6ebf0;
+            padding: 0.75rem 0.65rem;
             text-align: left;
+            vertical-align: middle;
+            font-size: .92rem;
         }
 
         th {
-            background-color: #e9ecef;
+            color: #657386;
+            background: #f7f9fb;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        td button {
+            margin: .15rem .2rem .15rem 0;
+        }
+
+        #panelIntegrantes,
+        #panelAsistencia,
+        #formEditarIntegrante {
+            border: 1px solid #dde3ea;
+            border-radius: 8px;
+            box-shadow: none;
         }
 
         .app-navbar {
@@ -90,8 +159,6 @@
             background: #12344d;
             color: white;
             padding: 0.75rem 1rem;
-            margin: -1rem -1rem 1.5rem;
-            border-radius: 0 0 8px 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.12);
         }
 
@@ -109,6 +176,7 @@
         .app-navbar a,
         .app-navbar button {
             width: auto;
+            min-height: auto;
             color: white;
             text-decoration: none;
             background: transparent;
@@ -116,12 +184,51 @@
             border-radius: 4px;
             padding: 0.45rem 0.7rem;
             font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .app-navbar a:hover,
         .app-navbar button:hover,
         .app-navbar a.activo {
             background: #2c7da0;
+        }
+
+        @media (max-width: 760px) {
+            .app-navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .app-navbar .links {
+                justify-content: flex-start;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+
+            table,
+            thead,
+            tbody,
+            tr,
+            th,
+            td {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                border-bottom: 1px solid #dde3ea;
+                padding: .65rem 0;
+            }
+
+            td {
+                border-bottom: 0;
+                padding: .35rem 0;
+            }
         }
     </style>
 </head>
