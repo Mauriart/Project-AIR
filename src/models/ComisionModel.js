@@ -291,12 +291,21 @@ const listarSesiones = async (idComision) => {
 
 const eliminarSesion = async (idSesion) => {
 
-    const query = `
-        DELETE FROM sesion_comision
-        WHERE id_sesion = $1
-    `;
+    await db.query(
+        `
+        DELETE FROM asistencia_sesion_comision
+        WHERE id_sesion = $1;
+        `,
+        [idSesion]
+    );
 
-    await db.query(query, [idSesion]);
+    await db.query(
+        `
+        DELETE FROM sesion_comision
+        WHERE id_sesion = $1;
+        `,
+        [idSesion]
+    );
 };
 
 module.exports = {
