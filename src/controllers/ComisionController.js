@@ -119,9 +119,9 @@ router.post('/integrantes', async (req, res) => {
 
     console.error('Error agregando integrante:', error);
 
-    return res.status(500).json({
+    return res.status(400).json({
       ok: false,
-      mensaje: 'Error interno del servidor'
+      mensaje: error.message || 'Error agregando integrante'
     });
   }
 });

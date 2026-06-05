@@ -1096,8 +1096,9 @@ document.getElementById('btnAgregarIntegrante').addEventListener('click', async 
         verIntegrantes(comisionSeleccionada);
 
     } else {
+        const error = await res.json();
 
-        alert('Error agregando integrante');
+        alert(error.mensaje || 'Error agregando integrante');
     }
 
 });

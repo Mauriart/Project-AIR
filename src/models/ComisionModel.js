@@ -47,6 +47,28 @@ const agregarIntegrante = async (
     fecha_fin
 ) => {
 
+    const existeTraslape = await db.query(
+    `
+    SELECT 1
+    FROM integrante_comision
+    WHERE id_comision = $1
+        AND asambleista_id = $2
+        AND estado = 'Activo'
+        AND fecha_inicio <= COALESCE($4::date, DATE '9999-12-31')
+        AND COALESCE(fecha_fin, DATE '9999-12-31') >= $3::date;
+    `,
+    [
+        id_comision,
+        asambleista_id,
+        fecha_inicio,
+        fecha_fin || null
+    ]
+    );
+
+    if (existeTraslape.rows.length > 0) {
+        throw new Error('Ya existe un integrante activo con fechas traslapadas en esta comisión');
+    }
+
     const query = `
         INSERT INTO integrante_comision (
             id_comision,
@@ -135,38 +157,48 @@ const obtenerPorcentajeAsistencia = async (idComision) => {
             a.asambleista_id,
             a.nombre,
             a.cedula,
-            COUNT(ascm.id_asistencia) AS total_registros,
-            SUM(
+
+            COUNT(sc.id_sesion) AS total_sesiones,
+
+            COUNT(
                 CASE
-                    WHEN ascm.estado_asistencia = 'Presente' THEN 1
-                    ELSE 0
+                    WHEN ascg.estado_asistencia = 'Presente'
+                    THEN 1
                 END
             ) AS total_presentes,
+
             ROUND(
                 (
-                    SUM(
+                    COUNT(
                         CASE
-                            WHEN ascm.estado_asistencia = 'Presente' THEN 1
-                            ELSE 0
+                            WHEN ascg.estado_asistencia = 'Presente'
+                            THEN 1
                         END
                     )::numeric
-                    / NULLIF(COUNT(ascm.id_asistencia), 0)
+                    / NULLIF(COUNT(sc.id_sesion), 0)
                 ) * 100,
                 2
             ) AS porcentaje_asistencia
+
         FROM integrante_comision ic
+
         INNER JOIN asambleista a
             ON ic.asambleista_id = a.asambleista_id
-        LEFT JOIN asistencia_sesion_comision ascm
-            ON ascm.asambleista_id = a.asambleista_id
+
         LEFT JOIN sesion_comision sc
-            ON ascm.id_sesion = sc.id_sesion
-            AND sc.id_comision = ic.id_comision
+            ON sc.id_comision = ic.id_comision
+
+        LEFT JOIN asistencia_sesion_comision ascg
+            ON ascg.id_sesion = sc.id_sesion
+            AND ascg.asambleista_id = ic.asambleista_id
+
         WHERE ic.id_comision = $1
+
         GROUP BY
             a.asambleista_id,
             a.nombre,
             a.cedula
+
         ORDER BY a.nombre;
     `;
 
