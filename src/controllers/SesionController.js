@@ -169,6 +169,18 @@ router.get('/:id/padron', verificarAutenticacion, async (req, res) => {
   }
 });
 
+// GET /sesiones/:id/asistencia
+// Obtiene la asistencia registrada de una sesión
+router.get('/:id/asistencia', verificarAutenticacion, async (req, res) => {
+  try {
+    const asistencia = await SesionModel.obtenerAsistenciaSesion(req.params.id);
+    return res.status(200).json({ ok: true, data: asistencia });
+  } catch (error) {
+    console.error('Error obteniendo asistencia:', error);
+    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
+  }
+});
+
 // POST /sesiones/:id/asistencia
 // Registra el pase de lista de una sesión
 router.post('/:id/asistencia', verificarAutenticacion,
