@@ -240,6 +240,7 @@
     <a href="/buscador">Buscador</a>
     <a href="/propuesta-nueva" class="activo">Propuestas</a>
     <a href="/preview-certificacion">Certificaciones</a>
+    <a href="/vista-comisiones">Comisiones</a>
     <a href="/asistencia">Sesiones</a>
     <a href="/votaciones-tablero">Votaciones</a>
     <button type="button" id="logoutBtn">Salir</button>
@@ -343,14 +344,7 @@
     window.location.href = '/login';
   });
 
-  // =============================================
-  // RESPONSABILIDAD DE LA VISTA:
-  // - Cargar datos de los selectores via fetch
-  // - Capturar datos del formulario
-  // - Llamar al controlador via fetch
-  // - Mostrar resultado
-  // Sin lógica de negocio aquí.
-  // =============================================
+  // La vista carga selectores, captura el formulario y muestra resultados.
 
   const TOKEN = sessionStorage.getItem('airToken');
   const PERMISOS = JSON.parse(sessionStorage.getItem('airPermisos') || '[]');
