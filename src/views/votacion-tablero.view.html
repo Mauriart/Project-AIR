@@ -14,52 +14,6 @@
       padding: 40px 20px;
     }
 
-    .app-navbar {
-      position: sticky;
-      top: 0;
-      z-index: 900;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      background: #12344d;
-      color: white;
-      padding: 0.75rem 1rem;
-      margin: -40px -20px 20px;
-      border-radius: 0 0 12px 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-    }
-
-    .app-navbar .brand {
-      font-weight: bold;
-    }
-
-    .app-navbar .links {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .app-navbar a,
-    .app-navbar button {
-      color: white;
-      text-decoration: none;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 4px;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .app-navbar a:hover,
-    .app-navbar button:hover,
-    .app-navbar a.activo {
-      background: #2c7da0;
-    }
-
     .container { max-width: 820px; margin: 0 auto; }
 
     .page-header { margin-bottom: 24px; }
@@ -249,16 +203,6 @@
       padding: 40px;
       color: #aaa;
       font-size: 14px;
-    }
-
-    @media (max-width: 700px) {
-      .app-navbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .app-navbar .links {
-        justify-content: flex-start;
-      }
     }
   </style>
 </head>
