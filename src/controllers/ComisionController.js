@@ -2,10 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 const ComisionModel = require('../models/ComisionModel');
+const { verificarAutenticacion, requiereRol } = require('./AuthController');
 
+const ROLES_GESTION_COMISIONES = ['Administrador', 'Secretaría'];
+const requiereGestionComisiones = requiereRol(...ROLES_GESTION_COMISIONES);
+
+router.use(verificarAutenticacion);
 
 // POST /comisiones
-router.post('/', async (req, res) => {
+router.post('/', requiereGestionComisiones, async (req, res) => {
 
   const { nombre, descripcion } = req.body;
 
@@ -89,7 +94,7 @@ router.get('/', async (req, res) => {
 
 
 // POST /comisiones/integrantes
-router.post('/integrantes', async (req, res) => {
+router.post('/integrantes', requiereGestionComisiones, async (req, res) => {
 
   const {
     id_comision,
@@ -128,7 +133,7 @@ router.post('/integrantes', async (req, res) => {
 
 
 // POST /comisiones/asistencia
-router.post('/asistencia', async (req, res) => {
+router.post('/asistencia', requiereGestionComisiones, async (req, res) => {
 
   const {
     id_sesion,
@@ -161,7 +166,7 @@ router.post('/asistencia', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requiereGestionComisiones, async (req, res) => {
 
     try {
 
@@ -185,7 +190,7 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-router.delete('/integrantes/:id', async (req, res) => {
+router.delete('/integrantes/:id', requiereGestionComisiones, async (req, res) => {
 
     try {
 
@@ -209,7 +214,7 @@ router.delete('/integrantes/:id', async (req, res) => {
 
 });
 
-router.put('/integrantes/:id', async (req, res) => {
+router.put('/integrantes/:id', requiereGestionComisiones, async (req, res) => {
 
     const {
         rol,
@@ -245,7 +250,7 @@ router.put('/integrantes/:id', async (req, res) => {
 
 });
 
-router.post('/:id/sesiones', async (req, res) => {
+router.post('/:id/sesiones', requiereGestionComisiones, async (req, res) => {
 
     const { fecha, descripcion } = req.body;
 
@@ -296,7 +301,7 @@ router.get('/:id/sesiones', async (req, res) => {
     }
 });
 
-router.delete('/sesiones/:id', async (req, res) => {
+router.delete('/sesiones/:id', requiereGestionComisiones, async (req, res) => {
 
     try {
 
@@ -318,7 +323,7 @@ router.delete('/sesiones/:id', async (req, res) => {
     }
 });
 
-router.post('/sesiones/:id/asistencia', async (req, res) => {
+router.post('/sesiones/:id/asistencia', requiereGestionComisiones, async (req, res) => {
 
     const {
         asambleista_id,
