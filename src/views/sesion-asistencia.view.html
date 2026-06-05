@@ -332,7 +332,12 @@
 </div>
 
 <script>
-  // La vista muestra datos, captura selecciones y llama al controlador.
+  // =============================================
+  // RESPONSABILIDAD DE LA VISTA:
+  // Mostrar datos, capturar selecciones del usuario
+  // y llamar al controlador via fetch.
+  // Sin lógica de negocio ni cálculos de quórum aquí.
+  // =============================================
 
   const TOKEN = sessionStorage.getItem('airToken');
   let padronActual = [];
