@@ -748,11 +748,24 @@
     });
     const datos = await res.json();
     padronActual = datos.ok ? datos.data : [];
-    selecciones = {};
+    selecciones = await cargarAsistenciaRegistrada(idSesion);
 
     document.getElementById('totalPadron').textContent =
       `${padronActual.length} asambleistas en el padron activo`;
     renderPadron();
+  }
+
+  async function cargarAsistenciaRegistrada(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}/asistencia`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok || !datos.data?.length) return {};
+
+    return datos.data.reduce((seleccion, asistencia) => {
+      seleccion[asistencia.asambleista_id] = asistencia.id_estado_asistencia;
+      return seleccion;
+    }, {});
   }
 
   function renderPadron() {
