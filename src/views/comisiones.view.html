@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comisiones AIR</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6f8;
+            color: #172033;
+        }
+
+        body > .seccion,
+        body > div.seccion + div.seccion {
+            width: min(100% - 2rem, 1160px);
+            margin: 1rem auto;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            color: #172033;
+            font-size: 1.7rem;
+            font-weight: 650;
+        }
+
+        h2 {
+            margin: 0 0 1rem;
+            color: #344256;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        h3 {
+            margin: 1.25rem 0 .75rem;
+            color: #344256;
+            font-size: 1rem;
+            font-weight: 650;
+        }
+
+        button {
+            min-height: 36px;
+            background: #12344d;
+            color: white;
+            border: 1px solid #12344d;
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 650;
+        }
+
+        button:hover {
+            background: #0c2639;
+        }
+
+        .btn-peligro {
+            background: #a33a3a;
+            border-color: #a33a3a;
+        }
+
+        .btn-peligro:hover {
+            background: #832525;
+        }
+
+        .seccion {
+            background: white;
+            padding: 1.5rem;
+            border: 1px solid #dde3ea;
+            border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(19, 35, 51, 0.06);
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 160px minmax(220px, 360px);
+            gap: .75rem;
+            align-items: center;
+            margin-bottom: .85rem;
+        }
+
+        label {
+            color: #344256;
+            font-weight: 650;
+            font-size: .9rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 38px;
+            padding: 0.5rem 0.65rem;
+            border: 1.5px solid #ccd5df;
+            border-radius: 6px;
+            font: inherit;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #2c7da0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #e6ebf0;
+            padding: 0.75rem 0.65rem;
+            text-align: left;
+            vertical-align: middle;
+            font-size: .92rem;
+        }
+
+        th {
+            color: #657386;
+            background: #f7f9fb;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        td button {
+            margin: .15rem .2rem .15rem 0;
+        }
+
+        #panelIntegrantes,
+        #panelAsistencia,
+        #formEditarIntegrante {
+            border: 1px solid #dde3ea;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #12344d;
+            color: white;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+
+        .app-navbar .brand {
+            font-weight: bold;
+        }
+
+        .app-navbar .links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .app-navbar a,
+        .app-navbar button {
+            width: auto;
+            min-height: auto;
+            color: white;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .app-navbar a:hover,
+        .app-navbar button:hover,
+        .app-navbar a.activo {
+            background: #2c7da0;
+        }
+
+        @media (max-width: 760px) {
+            .app-navbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .app-navbar .links {
+                justify-content: flex-start;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+
+            table,
+            thead,
+            tbody,
+            tr,
+            th,
+            td {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                border-bottom: 1px solid #dde3ea;
+                padding: .65rem 0;
+            }
+
+            td {
+                border-bottom: 0;
+                padding: .35rem 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<script>
+    if (!sessionStorage.getItem('airToken')) {
+        window.location.replace('/login');
+    }
+</script>
+
+<nav class="app-navbar">
+    <div class="brand">AIR</div>
+
+    <div class="links">
+        <a href="/buscador">Buscador</a>
+        <a href="/propuesta-nueva">Propuestas</a>
+        <a href="/preview-certificacion">Certificaciones</a>
+        <a href="/vista-comisiones" class="activo">Comisiones</a>
+        <a href="/asistencia">Sesiones</a>
+        <a href="/votaciones-tablero">Votaciones</a>
+        <a href="/vista-reportes">Reportes</a>
+        <button type="button" id="logoutBtn">Salir</button>
+    </div>
+</nav>
+
+<div class="seccion">
+
+    <h1>Gestión de Comisiones</h1>
+
+    <h2>Crear Comisión</h2>
+
+    <div class="form-group">
+        <label>Nombre:</label>
+        <input type="text" id="nombreComision">
+    </div>
+
+    <div class="form-group">
+        <label>Descripción:</label>
+        <input type="text" id="descripcionComision">
+    </div>
+
+    <button id="btnCrearComision">
+        Crear comisión
+    </button>
+
+</div>
+
+<div class="seccion">
+
+    <h2>Listado de Comisiones</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+                <th>Integrantes</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaComisionesBody">
+
+        </tbody>
+    </table>
+
+    <div
+    id="panelIntegrantes"
+    style="
+        display:none;
+        margin-top:2rem;
+        background:white;
+        padding:1rem;
+        border-radius:8px;
+    ">
+    <div
+    id="formEditarIntegrante"
+    style="
+        display:none;
+        margin-top:1rem;
+        border-top:1px solid #ccc;
+        padding-top:1rem;
+    ">
+
+    <h3>Editar integrante</h3>
+
+    <input
+        type="hidden"
+        id="editIdIntegrante">
+
+    <div class="form-group">
+    <label>Rol:</label>
+
+        <select id="editRol">
+
+            <option value="Coordinador">
+                Coordinador
+            </option>
+
+            <option value="Miembro">
+                Miembro
+            </option>
+
+        </select>
+    </div>  
+
+    <div class="form-group">
+        <label>Estado:</label>
+
+        <select id="editEstado">
+
+            <option value="Activo">
+                Activo
+            </option>
+
+            <option value="Inactivo">
+                Inactivo
+            </option>
+
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha fin:</label>
+
+        <input
+            type="date"
+            id="editFechaFin">
+    </div>
+
+    <button id="btnGuardarEdicion">
+        Guardar cambios
+    </button>
+
+</div>
+
+    <h3>Agregar integrante</h3>
+
+<div class="form-group">
+    <label>ID Asambleísta:</label>
+    <input type="number" id="asambleistaId">
+</div>
+
+<div class="form-group">
+    <label>Rol:</label>
+
+    <select id="rolIntegrante">
+        <option value="Miembro">Miembro</option>
+        <option value="Coordinador">Coordinador</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Fecha inicio:</label>
+    <input type="date" id="fechaInicio">
+</div>
+
+<button id="btnAgregarIntegrante">
+    Agregar integrante
+</button>
+
+    <h3>
+        Integrantes de la comisión
+    </h3>
+
+    <h3>Sesiones de la comisión</h3>
+
+    <input type="datetime-local" id="fechaSesion">
+
+    <input type="text" id="descripcionSesion">
+
+    <button id="btnCrearSesion">
+        Crear sesión
+    </button>
+
+    <table>
+
+    <thead>
+    <tr>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Asistencia</th>
+    </tr>
+    </thead>
+
+    <tbody id="tablaSesionesBody">
+
+    </tbody>
+
+</table>
+
+<div
+    id="panelAsistencia"
+    style="
+        display:none;
+        margin-top:2rem;
+        background:white;
+        padding:1rem;
+        border-radius:8px;
+    ">
+
+    <h3>Registro de asistencia</h3>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Asistencia</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tablaAsistenciaBody">
+
+        </tbody>
+
+    </table>
+
+    <h3>Porcentaje de asistencia</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Presentes</th>
+                <th>Total</th>
+                <th>Porcentaje</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaPorcentajeBody">
+        </tbody>
+    </table>
+
+    <br>
+
+    <button id="btnGuardarAsistencia">
+        Guardar asistencia
+    </button>
+
+</div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tablaIntegrantesBody">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</div>
+
+<script>
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+
+    sessionStorage.removeItem('airToken');
+    sessionStorage.removeItem('airRoles');
+    sessionStorage.removeItem('airPermisos');
+
+    window.location.href = '/login';
+});
+
+const TOKEN = sessionStorage.getItem('airToken');
+
+let comisionSeleccionada = null;
+
+let sesionSeleccionada = null;
+
+function escapeHtml(value) {
+
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function authFetch(url, options = {}) {
+
+    return fetch(url, {
+
+        ...options,
+
+        headers: {
+            ...(options.headers || {}),
+            'Authorization': `Bearer ${TOKEN}`
+        }
+    });
+}
+
+async function cargarComisiones() {
+
+    const res = await authFetch('/comisiones');
+
+    const data = await res.json();
+
+    const tbody = document.getElementById('tablaComisionesBody');
+
+    tbody.innerHTML = data.comisiones.map(c => `
+
+
+
+        <tr>
+            <td>${c.id_comision}</td>
+            <td>${escapeHtml(c.nombre)}</td>
+            <td>${escapeHtml(c.descripcion || '')}</td>
+
+            <td>
+
+                <button
+                    onclick="eliminarComision(${c.id_comision})"
+                    class="btn-peligro">
+
+                    Eliminar
+
+                </button>
+
+            </td>
+
+            <td>
+
+                <button
+                    onclick="verIntegrantes(${c.id_comision})">
+
+                    Ver integrantes
+
+                </button>
+
+            </td>
+        </tr>
+
+    `).join('');
+}
+
+async function abrirAsistencia(idSesion) {
+
+    sesionSeleccionada = idSesion;
+
+    const res = await authFetch(
+        `/comisiones/${comisionSeleccionada}/integrantes`
+    );
+
+    const integrantes = await res.json();
+
+    const panel =
+        document.getElementById(
+            'panelAsistencia'
+        );
+    
+    const resAsistencia = await authFetch(
+        `/comisiones/sesiones/${idSesion}/asistencia`
+    );
+
+    const asistenciaGuardada = await resAsistencia.json();
+
+    const tbody =
+        document.getElementById(
+            'tablaAsistenciaBody'
+        );
+
+    panel.style.display = 'block';
+
+    tbody.innerHTML =
+        integrantes.map(i => `
+
+            <tr>
+
+                <td>${escapeHtml(i.nombre)}</td>
+
+                <td>${escapeHtml(i.cedula)}</td>
+
+                <td>
+
+                    <select id="estado_${i.asambleista_id}">
+                        <option
+                            value="Presente"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Presente'
+                            ) ? 'selected' : ''}>
+
+                            Presente
+                        </option>
+
+                        <option
+                            value="Ausente"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Ausente'
+                            ) ? 'selected' : ''}>
+
+                            Ausente
+                        </option>
+
+                        <option
+                            value="Justificado"
+                            ${asistenciaGuardada.find(a =>
+                                a.asambleista_id === i.asambleista_id &&
+                                a.estado_asistencia === 'Justificado'
+                            ) ? 'selected' : ''}>
+
+                            Justificado
+                        </option>
+
+                    </select>
+
+                </td>
+
+            </tr>
+
+        `).join('');
+}
+
+document
+.getElementById('btnGuardarAsistencia')
+.addEventListener('click', guardarAsistencia);
+
+async function guardarAsistencia() {
+
+    const filas =
+        document.querySelectorAll(
+            '#tablaAsistenciaBody tr'
+        );
+
+    for (const fila of filas) {
+
+        const select =
+            fila.querySelector('select');
+
+        const asambleistaId =
+            select.id.replace(
+                'estado_',
+                ''
+            );
+
+        const estado =
+            select.value;
+
+        const res = await authFetch(
+            `/comisiones/sesiones/${sesionSeleccionada}/asistencia`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    asambleista_id: asambleistaId,
+                    estado_asistencia: estado
+                })
+            }
+        );
+
+        console.log(
+            asambleistaId,
+            estado,
+            res.status
+        );
+    }
+
+    alert(
+        'Asistencia registrada'
+    );
+
+    cargarPorcentajes(comisionSeleccionada);
+}
+
+document.getElementById('btnCrearComision').addEventListener('click', async () => {
+
+    const nombre = document.getElementById('nombreComision').value;
+
+    const descripcion = document.getElementById('descripcionComision').value;
+
+    const res = await authFetch('/comisiones', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            nombre,
+            descripcion
+        })
+    });
+
+    if (res.ok) {
+
+        alert('Comisión creada');
+
+        document.getElementById('nombreComision').value = '';
+        document.getElementById('descripcionComision').value = '';
+
+        cargarComisiones();
+
+    } else {
+
+        alert('Error al crear comisión');
+    }
+});
+
+async function eliminarComision(id) {
+
+    const confirmar = confirm(
+        'Esta acción eliminará la comisión, sus integrantes, sesiones y asistencias registradas. ¿Desea continuar?'
+    );
+
+    if (!confirmar) return;
+
+    const res = await authFetch(`/comisiones/${id}`, {
+
+        method: 'DELETE'
+    });
+
+    if (res.ok) {
+
+        cargarComisiones();
+
+    } else {
+
+        alert('Error al eliminar');
+    }
+}
+
+async function verIntegrantes(idComision) {
+
+    comisionSeleccionada = idComision;
+
+    const res = await authFetch(`/comisiones/${idComision}/integrantes`);
+
+    const data = await res.json();
+
+    const tbody = document.getElementById('tablaIntegrantesBody');
+
+    const panel = document.getElementById('panelIntegrantes');
+
+    panel.style.display = 'block';
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4">
+                    No hay integrantes registrados
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = data.map(i => `
+
+        <tr>
+
+            <td>${escapeHtml(i.nombre)}</td>
+
+            <td>${escapeHtml(i.cedula)}</td>
+
+            <td>${escapeHtml(i.rol)}</td>
+
+            <td>${escapeHtml(i.estado)}</td>
+
+            <td>
+
+                <button
+                    onclick="editarIntegrante(
+                        ${i.id_integrante},
+                        '${i.rol}',
+                        '${i.estado}'
+                    )">
+
+                    Editar
+
+                </button>
+
+                <button
+                    class="btn-peligro"
+                    onclick="eliminarIntegrante(${i.id_integrante})">
+
+                    Eliminar
+
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join('');
+    
+    cargarSesiones(idComision);
+
+    cargarPorcentajes(idComision);
+}
+
+
+async function cargarSesiones(idComision) {
+
+    const res =
+        await authFetch(
+            `/comisiones/${idComision}/sesiones`
+        );
+
+    const data = await res.json();
+
+    const tbody =
+        document.getElementById(
+            'tablaSesionesBody'
+        );
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    No hay sesiones registradas
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = data.map(s => `
+
+        <tr>
+
+            <td>
+                ${new Date(s.fecha).toLocaleString('es-CR')}
+            </td>
+
+            <td>${escapeHtml(s.descripcion || '')}</td>
+
+            <td>
+
+                <button
+                    onclick="abrirAsistencia(${s.id_sesion})">
+
+                    Registrar asistencia
+
+                </button>
+
+                <button
+                    class="btn-peligro"
+                    onclick="eliminarSesion(${s.id_sesion})">
+
+                    Eliminar
+
+                </button>
+
+            </td>
+
+        </tr>
+
+    `).join('');
+}
+
+async function eliminarIntegrante(idIntegrante) {
+
+    const confirmar =
+        confirm('¿Eliminar integrante?');
+
+    if (!confirmar) return;
+
+    const res = await authFetch(
+
+        `/comisiones/integrantes/${idIntegrante}`,
+
+        {
+            method: 'DELETE'
+        }
+
+    );
+
+    if (res.ok) {
+
+        alert('Integrante eliminado');
+
+        verIntegrantes(comisionSeleccionada);
+
+    } else {
+
+        alert('Error eliminando integrante');
+    }
+
+}
+async function eliminarSesion(idSesion) {
+
+    const confirmar =
+        confirm(
+            '¿Eliminar sesión?'
+        );
+
+    if (!confirmar) return;
+
+    const res = await authFetch(
+        `/comisiones/sesiones/${idSesion}`,
+        {
+            method: 'DELETE'
+        }
+    );
+
+    if (res.ok) {
+
+        cargarSesiones(
+            comisionSeleccionada
+        );
+
+    } else {
+
+        alert(
+            'Error eliminando sesión'
+        );
+    }
+}
+
+async function cargarPorcentajes(idComision) {
+
+    const res = await authFetch(
+        `/comisiones/${idComision}/porcentaje-asistencia`
+    );
+
+    const data = await res.json();
+
+    const tbody = document.getElementById('tablaPorcentajeBody');
+
+    tbody.innerHTML = data.map(p => `
+
+        <tr>
+            <td>${escapeHtml(p.nombre)}</td>
+            <td>${escapeHtml(p.cedula)}</td>
+            <td>${p.total_presentes || 0}</td>
+            <td>${p.total_registros || 0}</td>
+            <td>${p.porcentaje_asistencia || 0}%</td>
+        </tr>
+
+    `).join('');
+}
+
+function editarIntegrante(
+    idIntegrante,
+    rol,
+    estado
+) {
+
+    document
+        .getElementById(
+            'formEditarIntegrante'
+        )
+        .style.display = 'block';
+
+    document
+        .getElementById(
+            'editIdIntegrante'
+        )
+        .value = idIntegrante;
+
+    document
+        .getElementById(
+            'editRol'
+        )
+        .value = rol;
+
+    document
+        .getElementById(
+            'editEstado'
+        )
+        .value = estado;
+
+}
+
+document
+.getElementById(
+    'btnGuardarEdicion'
+)
+.addEventListener(
+    'click',
+    async () => {
+
+        const idIntegrante =
+            document
+            .getElementById(
+                'editIdIntegrante'
+            )
+            .value;
+
+        const rol =
+            document
+            .getElementById(
+                'editRol'
+            )
+            .value;
+
+        const estado =
+            document
+            .getElementById(
+                'editEstado'
+            )
+            .value;
+
+        const fecha_fin =
+            document
+            .getElementById(
+                'editFechaFin'
+            )
+            .value;
+
+        const res =
+            await authFetch(
+
+                `/comisiones/integrantes/${idIntegrante}`,
+
+                {
+
+                    method: 'PUT',
+
+                    headers: {
+                        'Content-Type':
+                        'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        rol,
+                        estado,
+                        fecha_fin
+
+                    })
+
+                }
+
+            );
+
+        if (res.ok) {
+
+            alert(
+                'Integrante actualizado'
+            );
+
+            verIntegrantes(
+                comisionSeleccionada
+            );
+
+            document
+            .getElementById(
+                'formEditarIntegrante'
+            )
+            .style.display =
+            'none';
+
+        } else {
+
+            alert(
+                'Error actualizando integrante'
+            );
+
+        }
+
+    }
+);
+
+document
+.getElementById('btnCrearSesion')
+.addEventListener('click', async () => {
+
+    const fecha =
+        document.getElementById('fechaSesion').value;
+
+    console.log('Fecha enviada:', fecha);
+
+    const descripcion =
+        document.getElementById(
+            'descripcionSesion'
+        ).value;
+
+    if (!fecha) {
+
+        alert('Seleccione una fecha');
+
+        return;
+    }
+
+    const res = await authFetch(
+        `/comisiones/${comisionSeleccionada}/sesiones`,
+        {
+            method: 'POST',
+
+            headers: {
+                'Content-Type':
+                    'application/json'
+            },
+
+            body: JSON.stringify({
+                fecha,
+                descripcion
+            })
+        }
+    );
+
+    if (res.ok) {
+
+        cargarSesiones(
+            comisionSeleccionada
+        );
+
+        document.getElementById(
+            'fechaSesion'
+        ).value = '';
+
+        document.getElementById(
+            'descripcionSesion'
+        ).value = '';
+
+    } else {
+
+        alert('Error creando sesión');
+    }
+});
+
+document.getElementById('btnAgregarIntegrante').addEventListener('click', async () => {
+
+    const asambleista_id =
+        document.getElementById('asambleistaId').value;
+
+    const rol =
+        document.getElementById('rolIntegrante').value;
+
+    const fecha_inicio =
+        document.getElementById('fechaInicio').value;
+
+    const res = await authFetch('/comisiones/integrantes', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+
+            id_comision: comisionSeleccionada,
+            asambleista_id,
+            rol,
+            fecha_inicio,
+            fecha_fin: null
+
+        })
+
+    });
+
+    if (res.ok) {
+
+        alert('Integrante agregado');
+
+        verIntegrantes(comisionSeleccionada);
+
+    } else {
+        const error = await res.json();
+
+        alert(error.mensaje || 'Error agregando integrante');
+    }
+
+});
+
+cargarComisiones();
+
+</script>
+
+</body>
+</html>

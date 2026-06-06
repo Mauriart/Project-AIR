@@ -10,9 +10,10 @@
 1. [Catálogos Base](#1-catálogos-base)
 2. [Módulo de Seguridad](#2-módulo-de-seguridad-issue-0)
 3. [Módulo de Normativa](#3-módulo-de-normativa-issue-10)
-4. [Módulo de Asambleístas](#4-módulo-de-asambleístas-issue-9)
-5. [Vistas](#5-vistas)
-6. [Triggers y Funciones](#6-triggers-y-funciones)
+4. [Módulo de Comisiones](#4-módulo-de-comisiones-issue-7)
+5. [Módulo de Asambleístas](#5-módulo-de-asambleístas-issue-9)
+6. [Vistas](#6-vistas)
+7. [Triggers y Funciones](#7-triggers-y-funciones)
 
 ---
 
@@ -322,9 +323,78 @@ Registra el número de resolución oficial que formaliza la aprobación de una p
 
 **Importancia legal:** El número de resolución es el dato que aparece en las certificaciones emitidas para carrera profesional.
 
+**Reglas de flujo implementadas en backend:**
+- Una sesión puede tener múltiples puntos de agenda, ordenados por `orden`.
+- Una propuesta no puede agregarse a la agenda si ya está en estado Aprobada o Rechazada.
+- No se permite duplicar una propuesta ni un número de orden dentro de la misma sesión.
+- Cada punto de agenda puede tener una sola resolución oficial.
+- Al registrar una resolución marcada como aprobada, la propuesta vinculada cambia automáticamente a estado Aprobada.
+
 ---
 
-## 4. Módulo de Asambleístas (Issue #9)
+## 4. Módulo de Comisiones (Issue #7)
+
+Gestiona las comisiones de trabajo de la AIR, sus integrantes, sesiones internas y asistencia por sesión.
+
+---
+
+### comision
+Registra cada comisión de trabajo.
+
+| Campo | Tipo | Restricciones | Descripción |
+|-------|------|--------------|-------------|
+| id_comision | SERIAL | PK | Identificador único de la comisión |
+| nombre | VARCHAR(150) | NOT NULL | Nombre oficial de la comisión |
+| descripcion | TEXT | NULL | Descripción o alcance de trabajo |
+| estado | VARCHAR(20) | DEFAULT 'Activa' | Estado operativo de la comisión |
+| fecha_creacion | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Fecha de creación del registro |
+
+---
+
+### integrante_comision
+Vincula asambleístas con comisiones y conserva su rol y vigencia.
+
+| Campo | Tipo | Restricciones | Descripción |
+|-------|------|--------------|-------------|
+| id_integrante | SERIAL | PK | Identificador único del integrante |
+| id_comision | INT | NOT NULL, FK → comision | Comisión a la que pertenece |
+| asambleista_id | INT | NOT NULL, FK → asambleista | Asambleísta integrante |
+| rol | VARCHAR(50) | NOT NULL | Rol dentro de la comisión |
+| fecha_inicio | DATE | NOT NULL | Fecha de inicio de participación |
+| fecha_fin | DATE | NULL | Fecha de salida de la comisión |
+| estado | VARCHAR(20) | DEFAULT 'Activo' | Estado del integrante |
+
+**Regla de negocio:** El backend valida que un asambleísta no tenga integrantes activos traslapados en la misma comisión.
+
+---
+
+### sesion_comision
+Registra reuniones internas de una comisión.
+
+| Campo | Tipo | Restricciones | Descripción |
+|-------|------|--------------|-------------|
+| id_sesion | SERIAL | PK | Identificador único de la sesión |
+| id_comision | INT | NOT NULL, FK → comision | Comisión que realiza la sesión |
+| fecha | TIMESTAMP | NOT NULL | Fecha y hora de la sesión |
+| descripcion | TEXT | NULL | Detalle o propósito de la sesión |
+
+---
+
+### asistencia_sesion_comision
+Registra la asistencia de integrantes a sesiones de comisión.
+
+| Campo | Tipo | Restricciones | Descripción |
+|-------|------|--------------|-------------|
+| id_asistencia | SERIAL | PK | Identificador único de asistencia |
+| id_sesion | INT | NOT NULL, FK → sesion_comision | Sesión de comisión |
+| asambleista_id | INT | NOT NULL, FK → asambleista | Asambleísta evaluado |
+| estado_asistencia | VARCHAR(20) | NOT NULL | Presente, Ausente o Justificado |
+
+**Restricción:** `uq_asistencia_sesion_asambleista` evita duplicar la asistencia de un mismo asambleísta en una sesión.
+
+---
+
+## 5. Módulo de Asambleístas (Issue #9)
 
 Gestiona el padrón de asambleístas, sus nombramientos históricos y la trazabilidad de cambios de identidad.
 
@@ -392,7 +462,7 @@ Registra los cambios de nombre o cédula de un asambleísta, por ejemplo por res
 
 ---
 
-## 5. Vistas
+## 6. Vistas
 
 ### vw_asambleistas_nombramientos
 Vista que consolida la información de asambleístas con su nombramiento activo, calculando dinámicamente si el nombramiento está vigente.
@@ -411,7 +481,39 @@ Vista que consolida la información de asambleístas con su nombramiento activo,
 
 ---
 
-## 6. Triggers y Funciones
+### vw_reporte_certificaciones_mes
+Vista administrativa para consultar el total de certificaciones emitidas por mes.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| anio | certificacion_emitida.fecha_emision | Año de emisión |
+| mes | certificacion_emitida.fecha_emision | Mes de emisión |
+| periodo | calculado | Período con formato YYYY-MM |
+| total_certificaciones | certificacion_emitida | Total de certificaciones emitidas en el período |
+
+---
+
+### vw_reporte_certificaciones_sector
+Vista administrativa para consultar certificaciones emitidas por sector de representación.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| sector | catalogo_sector.nombre | Sector vigente del asambleísta al momento de emitir la certificación |
+| total_certificaciones | certificacion_emitida | Total de certificaciones emitidas para ese sector |
+
+---
+
+### vw_reporte_folios_anio
+Vista administrativa para consultar el conteo de folios emitidos por año.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| anio | certificacion_emitida.fecha_emision | Año de emisión del folio |
+| total_folios | certificacion_emitida.folio_unico | Total de folios emitidos en ese año |
+
+---
+
+## 7. Triggers y Funciones
 
 ### tg_vigencia_normativa
 | Atributo | Valor |
@@ -459,5 +561,5 @@ Vista que consolida la información de asambleístas con su nombramiento activo,
 
 ---
 
-*Documento generado para el Sprint 2 del Sistema de Gestión Legislativa AIR — TEC*  
+*Documento del Sprint 2 del Sistema de Gestión Legislativa AIR — TEC*  
 *Última actualización: Mayo 2026*

@@ -218,6 +218,9 @@ create table sesiones(
   link_acta VARCHAR(200),
   quorum int not null,
 
+  constraint uq_sesion_numero
+    unique (numero_sesion),
+
   constraint fk_sesion_modalidad
     foreign key (id_tipo_modalidad)
     references catalogo_tipo_modalidad(id_tipo_modalidad),
@@ -273,7 +276,13 @@ create table punto_agenda(
 
   constraint fk_agenda_propuesta
     foreign key (id_propuesta)
-    references propuesta(id_propuesta)
+    references propuesta(id_propuesta),
+
+  constraint uq_agenda_sesion_propuesta
+    unique (id_sesion, id_propuesta),
+
+  constraint uq_agenda_sesion_orden
+    unique (id_sesion, orden)
 );
 
 create table resolucion_propuesta(
@@ -284,7 +293,13 @@ create table resolucion_propuesta(
 
   constraint fk_resolucion_agenda
     foreign key (id_punto_agenda)
-    references punto_agenda(id_punto_agenda)
+    references punto_agenda(id_punto_agenda),
+
+  constraint uq_resolucion_punto_agenda
+    unique (id_punto_agenda),
+
+  constraint uq_resolucion_numero
+    unique (numero_resolucion)
 );
 
 -- elementos del sprint 2 (03_asambleistas.sql)
@@ -734,55 +749,22 @@ VALUES (2026, 'DAIR', 0);
 -- =========================================
 
 CREATE TABLE comision (
-    id_comision     SERIAL PRIMARY KEY,
-    nombre_comision VARCHAR(200) NOT NULL,
-    fecha_creacion  DATE NOT NULL DEFAULT CURRENT_DATE,
-    activa          BOOLEAN DEFAULT TRUE
+    id_comision    SERIAL PRIMARY KEY,
+    nombre         VARCHAR(150) NOT NULL,
+    descripcion    TEXT,
+    estado         VARCHAR(20) DEFAULT 'Activa',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Relación de comisión con las propuestas que analiza
-CREATE TABLE proposito_comision (
-    id_proposito_comision SERIAL PRIMARY KEY,
-    id_comision           INT NOT NULL,
-    id_propuesta          INT NOT NULL,
-    descripcion           TEXT,
-
-    CONSTRAINT uq_comision_propuesta
-        UNIQUE (id_comision, id_propuesta),
-
-    CONSTRAINT fk_proposito_comision
-        FOREIGN KEY (id_comision)
-        REFERENCES comision(id_comision)
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_proposito_propuesta
-        FOREIGN KEY (id_propuesta)
-        REFERENCES propuesta(id_propuesta)
-        ON DELETE RESTRICT
-);
-
-CREATE TABLE catalogo_rol_comision (
-    id_rol_comision SERIAL PRIMARY KEY,
-    nombre          VARCHAR(80) UNIQUE NOT NULL
-);
-
-INSERT INTO catalogo_rol_comision (nombre) VALUES
-    ('Coordinador'),
-    ('Miembro'),
-    ('Secretario');
-
+-- Integrantes, sesiones y asistencia de comisiones
 CREATE TABLE integrante_comision (
-    id_integrante_comision SERIAL PRIMARY KEY,
-    id_comision            INT NOT NULL,
-    id_asambleista         INT NOT NULL,
-    id_rol_comision        INT NOT NULL,
-    fecha_ingreso          DATE NOT NULL DEFAULT CURRENT_DATE,
-    fecha_salida           DATE,
-    estado                 VARCHAR(20) NOT NULL DEFAULT 'ACTIVO'
-        CHECK (estado IN ('ACTIVO', 'INACTIVO')),
-
-    CONSTRAINT uq_integrante_activo
-        UNIQUE (id_comision, id_asambleista),
+    id_integrante SERIAL PRIMARY KEY,
+    id_comision   INT NOT NULL,
+    asambleista_id INT NOT NULL,
+    rol           VARCHAR(50) NOT NULL,
+    fecha_inicio  DATE NOT NULL,
+    fecha_fin     DATE,
+    estado        VARCHAR(20) DEFAULT 'Activo',
 
     CONSTRAINT fk_integrante_comision
         FOREIGN KEY (id_comision)
@@ -790,24 +772,19 @@ CREATE TABLE integrante_comision (
         ON DELETE RESTRICT,
 
     CONSTRAINT fk_integrante_asambleista
-        FOREIGN KEY (id_asambleista)
+        FOREIGN KEY (asambleista_id)
         REFERENCES asambleista(asambleista_id)
         ON DELETE RESTRICT,
 
-    CONSTRAINT fk_integrante_rol
-        FOREIGN KEY (id_rol_comision)
-        REFERENCES catalogo_rol_comision(id_rol_comision)
-        ON DELETE RESTRICT,
-
     CONSTRAINT chk_fechas_integrante
-        CHECK (fecha_salida IS NULL OR fecha_salida > fecha_ingreso)
+        CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)
 );
 
 CREATE TABLE sesion_comision (
-    id_sesion_comision SERIAL PRIMARY KEY,
-    id_comision        INT NOT NULL,
-    fecha_hora         TIMESTAMP NOT NULL,
-    descripcion        TEXT,
+    id_sesion   SERIAL PRIMARY KEY,
+    id_comision INT NOT NULL,
+    fecha       TIMESTAMP NOT NULL,
+    descripcion TEXT,
 
     CONSTRAINT fk_sesion_comision
         FOREIGN KEY (id_comision)
@@ -816,27 +793,23 @@ CREATE TABLE sesion_comision (
 );
 
 CREATE TABLE asistencia_sesion_comision (
-    id_asistencia_comision SERIAL PRIMARY KEY,
-    id_sesion_comision     INT NOT NULL,
-    id_asambleista         INT NOT NULL,
-    id_estado_asistencia   INT NOT NULL,
+    id_asistencia     SERIAL PRIMARY KEY,
+    id_sesion         INT NOT NULL,
+    asambleista_id    INT NOT NULL,
+    estado_asistencia VARCHAR(20) NOT NULL
+        CHECK (estado_asistencia IN ('Presente', 'Ausente', 'Justificado')),
 
     CONSTRAINT uq_asistencia_comision
-        UNIQUE (id_sesion_comision, id_asambleista),
+        UNIQUE (id_sesion, asambleista_id),
 
     CONSTRAINT fk_asist_sesion_comision
-        FOREIGN KEY (id_sesion_comision)
-        REFERENCES sesion_comision(id_sesion_comision)
+        FOREIGN KEY (id_sesion)
+        REFERENCES sesion_comision(id_sesion)
         ON DELETE RESTRICT,
 
     CONSTRAINT fk_asist_asambleista_comision
-        FOREIGN KEY (id_asambleista)
+        FOREIGN KEY (asambleista_id)
         REFERENCES asambleista(asambleista_id)
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_asist_estado_comision
-        FOREIGN KEY (id_estado_asistencia)
-        REFERENCES catalogo_estado_asistencia(id_estado_asistencia)
         ON DELETE RESTRICT
 );
 
@@ -952,3 +925,41 @@ CREATE TABLE anulacion_certificacion (
         REFERENCES certificacion_emitida(id_certificacion)
         ON DELETE RESTRICT
 );
+
+-- SPRINT 3: Issue #16 - Reportes administrativos
+-- Vista para contar certificaciones emitidas por mes.
+CREATE OR REPLACE VIEW vw_reporte_certificaciones_mes AS
+SELECT
+    EXTRACT(YEAR FROM fecha_emision)::INT AS anio,
+    EXTRACT(MONTH FROM fecha_emision)::INT AS mes,
+    TO_CHAR(fecha_emision, 'YYYY-MM') AS periodo,
+    COUNT(*)::INT AS total_certificaciones
+FROM certificacion_emitida
+GROUP BY
+    EXTRACT(YEAR FROM fecha_emision),
+    EXTRACT(MONTH FROM fecha_emision),
+    TO_CHAR(fecha_emision, 'YYYY-MM');
+
+-- Vista para contar certificaciones emitidas por sector de representacion.
+CREATE OR REPLACE VIEW vw_reporte_certificaciones_sector AS
+SELECT
+    COALESCE(cs.nombre, 'Sin sector') AS sector,
+    COUNT(c.id_certificacion)::INT AS total_certificaciones
+FROM certificacion_emitida c
+JOIN asambleista a
+    ON c.id_asambleista = a.asambleista_id
+LEFT JOIN nombramiento n
+    ON n.asambleista_id = a.asambleista_id
+    AND c.fecha_emision::DATE >= n.fecha_inicio
+    AND c.fecha_emision::DATE <= COALESCE(n.fecha_fin, DATE '9999-12-31')
+LEFT JOIN catalogo_sector cs
+    ON n.sector_id = cs.id_sector
+GROUP BY COALESCE(cs.nombre, 'Sin sector');
+
+-- Vista para contar folios emitidos por anio.
+CREATE OR REPLACE VIEW vw_reporte_folios_anio AS
+SELECT
+    EXTRACT(YEAR FROM fecha_emision)::INT AS anio,
+    COUNT(folio_unico)::INT AS total_folios
+FROM certificacion_emitida
+GROUP BY EXTRACT(YEAR FROM fecha_emision);
