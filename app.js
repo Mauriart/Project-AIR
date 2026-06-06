@@ -20,6 +20,7 @@ const asambleistaController = require('./src/controllers/asambleistaController')
 const sesionRoutes = require('./src/controllers/SesionController');
 const votacionRoutes = require('./src/controllers/VotacionController');
 
+
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
@@ -45,6 +46,8 @@ app.get('/api/nombramientos/:id', verificarAutenticacion, requierePermiso('GESTI
 app.post('/api/asambleistas/:id/nombramientos', verificarAutenticacion, requierePermiso('GESTIONAR_ASAMBLEISTAS'), asambleistaController.crearNombramiento);
 app.put('/api/nombramientos/:id', verificarAutenticacion, requierePermiso('GESTIONAR_ASAMBLEISTAS'), asambleistaController.actualizarNombramiento);
 app.delete('/api/nombramientos/:id', verificarAutenticacion, requierePermiso('GESTIONAR_ASAMBLEISTAS'), asambleistaController.eliminarNombramiento);
+
+app.use('/api/certificaciones', certificacionRoutes);
 
 // Rutas vistas
 app.get('/', (req, res) => {
