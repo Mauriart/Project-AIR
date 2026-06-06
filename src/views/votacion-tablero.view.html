@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIR — Tablero de Votaciones</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container { max-width: 820px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; font-weight: 600; color: #1a1a2e; }
+    .page-header p  { font-size: 13px; color: #666; margin-top: 4px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      background: white;
+    }
+    select:focus { border-color: #534AB7; }
+
+    /* Quórum banner */
+    .quorum-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .quorum-ok  { background: #E1F5EE; color: #085041; border: 1px solid #5DCAA5; }
+    .quorum-no  { background: #FCEBEB; color: #791F1F; border: 1px solid #f5c6c6; }
+    .quorum-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .quorum-ok .quorum-dot  { background: #0F6E56; }
+    .quorum-no .quorum-dot  { background: #c53030; }
+
+    /* Propuesta card */
+    .propuesta-card {
+      border: 1.5px solid #eee;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: border-color .2s;
+    }
+    .propuesta-card:hover { border-color: #534AB7; }
+    .propuesta-card.firmada { background: #f8f8f8; opacity: .8; }
+
+    .propuesta-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .propuesta-titulo { font-size: 14px; font-weight: 500; color: #1a1a2e; }
+    .propuesta-meta   { font-size: 12px; color: #888; margin-top: 3px; }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-aprobada   { background: #E1F5EE; color: #0F6E56; }
+    .badge-rechazada  { background: #FCEBEB; color: #791F1F; }
+    .badge-pendiente  { background: #FAEEDA; color: #633806; }
+    .badge-firmada    { background: #f0f0f0; color: #666; }
+    .badge-calificada { background: #EEEDFE; color: #3C3489; }
+    .badge-simple     { background: #E6F1FB; color: #0C447C; }
+
+    /* Inputs de votos */
+    .votos-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .voto-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: #888;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .voto-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .voto-group input:focus { border-color: #534AB7; }
+    .voto-group input:disabled { background: #f5f5f5; color: #aaa; }
+
+    .voto-group.favor input:focus  { border-color: #0F6E56; }
+    .voto-group.contra input:focus { border-color: #c53030; }
+
+    /* Botones de acción */
+    .acciones-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .2s;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-registrar {
+      background: #534AB7;
+      color: white;
+    }
+    .btn-registrar:hover:not(:disabled) { background: #3C3489; }
+
+    .btn-firmar {
+      background: #0F6E56;
+      color: white;
+    }
+    .btn-firmar:hover:not(:disabled) { background: #085041; }
+
+    .btn-outline {
+      background: white;
+      border-color: #ddd;
+      color: #555;
+    }
+    .btn-outline:hover { background: #f5f5f5; }
+
+    /* Resultado en tiempo real */
+    .resultado-preview {
+      display: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .resultado-aprobada { background: #E1F5EE; color: #085041; }
+    .resultado-rechazada { background: #FCEBEB; color: #791F1F; }
+
+    .alert {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .alert-error   { background: #FCEBEB; border: 1px solid #f5c6c6; color: #791F1F; }
+    .alert-success { background: #E1F5EE; border: 1px solid #5DCAA5; color: #085041; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #aaa;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+<script>
+  if (!sessionStorage.getItem('airToken')) {
+    window.location.replace('/login');
+  }
+</script>
+
+<nav class="app-navbar">
+  <div class="brand">AIR</div>
+  <div class="links">
+    <a href="/buscador">Buscador</a>
+    <a href="/propuesta-nueva">Propuestas</a>
+    <a href="/preview-certificacion">Certificaciones</a>
+    <a href="/asistencia">Sesiones</a>
+    <a href="/votaciones-tablero" class="activo">Votaciones</a>
+    <button type="button" id="logoutBtn">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="page-header">
+    <h1>Tablero de Votaciones</h1>
+    <p>Sistema AIR — Asamblea Institucional Representativa · TEC</p>
+  </div>
+
+  <!-- Selector de sesión -->
+  <div class="card">
+    <div class="card-title">Seleccionar sesión</div>
+    <select id="selectSesion" onchange="cargarSesion()">
+      <option value="">— Seleccioná una sesión —</option>
+    </select>
+  </div>
+
+  <!-- Panel de propuestas -->
+  <div id="panelVotaciones" style="display:none">
+    <div id="alertMsg" class="alert"></div>
+    <div id="listaPropuestas">
+      <div class="empty-state">No hay propuestas agendadas en esta sesión</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TOKEN = sessionStorage.getItem('airToken');
+  let quorumActual = false;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('airToken');
+      sessionStorage.removeItem('airRoles');
+      sessionStorage.removeItem('airPermisos');
+      window.location.href = '/login';
+    });
+
+    await cargarSesiones();
+  });
+
+  async function cargarSesiones() {
+    try {
+      const res = await fetch('/sesiones', {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      const select = document.getElementById('selectSesion');
+
+      datos.data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id_sesion;
+        opt.textContent = `${s.numero_sesion} · ${s.tipo_sesion} · ${new Date(s.fecha).toLocaleDateString('es-CR')}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Error cargando sesiones:', e);
+    }
+  }
+
+  async function cargarSesion() {
+    const id_sesion = document.getElementById('selectSesion').value;
+    if (!id_sesion) return;
+
+    await verificarQuorum(id_sesion);
+    await cargarPropuestas(id_sesion);
+    document.getElementById('panelVotaciones').style.display = 'block';
+  }
+
+  async function verificarQuorum(id_sesion) {
+    try {
+      const res = await fetch(`/sesiones/${id_sesion}/quorum`, {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      if (!datos.ok || !datos.data) return;
+
+      quorumActual = datos.data.quorum_cumplido;
+    } catch (e) {
+      console.error('Error verificando quórum:', e);
+    }
+  }
+
+  async function cargarPropuestas(id_sesion) {
+    try {
+      const res = await fetch(`/votaciones/sesion/${id_sesion}`, {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      renderPropuestas(datos.data, id_sesion);
+    } catch (e) {
+      console.error('Error cargando propuestas:', e);
+    }
+  }
+
+  function renderPropuestas(propuestas, id_sesion) {
+    const lista = document.getElementById('listaPropuestas');
+
+    if (!propuestas || propuestas.length === 0) {
+      lista.innerHTML = '<div class="empty-state">No hay propuestas agendadas en esta sesión</div>';
+      return;
+    }
+
+    // Banner de quórum
+    const bannerHtml = `
+      <div class="quorum-banner ${quorumActual ? 'quorum-ok' : 'quorum-no'}">
+        <div class="quorum-dot"></div>
+        ${quorumActual
+          ? 'Quórum legal confirmado — Se puede proceder a votación'
+          : 'Sin quórum legal — No se puede registrar votaciones'}
+      </div>
+    `;
+
+    const propuestasHtml = propuestas.map(p => {
+      const tienVotacion = p.id_votacion !== null;
+      const esFirme      = p.es_firme === true;
+      const resultado    = p.resultado_actual;
+
+      let badgeResultado = '';
+      if (esFirme)           badgeResultado = '<span class="badge badge-firmada">Firmada</span>';
+      else if (resultado === 'Aprobada')  badgeResultado = '<span class="badge badge-aprobada">Aprobada</span>';
+      else if (resultado === 'Rechazada') badgeResultado = '<span class="badge badge-rechazada">Rechazada</span>';
+      else                   badgeResultado = '<span class="badge badge-pendiente">Pendiente</span>';
+
+      const badgeMayoria = p.tipo_mayoria === 'Calificada'
+        ? '<span class="badge badge-calificada">Calificada 66%</span>'
+        : '<span class="badge badge-simple">Simple</span>';
+
+      return `
+        <div class="propuesta-card ${esFirme ? 'firmada' : ''}">
+          <div class="propuesta-head">
+            <div>
+              <div class="propuesta-titulo">${p.titulo}</div>
+              <div class="propuesta-meta">${p.codigo_air || 'Sin código'} · Mayoría ${badgeMayoria}</div>
+            </div>
+            ${badgeResultado}
+          </div>
+
+          ${!esFirme ? `
+            <div class="votos-row">
+              <div class="voto-group favor">
+                <label>A favor</label>
+                <input type="number" min="0" value="${tienVotacion ? p.votos_favor ?? 0 : 0}"
+                  id="favor-${p.id_propuesta}" ${esFirme ? 'disabled' : ''}
+                  oninput="previsualizarResultado(${p.id_propuesta}, ${id_sesion})">
+              </div>
+              <div class="voto-group contra">
+                <label>En contra</label>
+                <input type="number" min="0" value="${tienVotacion ? p.votos_contra ?? 0 : 0}"
+                  id="contra-${p.id_propuesta}" ${esFirme ? 'disabled' : ''}
+                  oninput="previsualizarResultado(${p.id_propuesta}, ${id_sesion})">
+              </div>
+              <div class="voto-group">
+                <label>Abstenciones</label>
+                <input type="number" min="0" value="${tienVotacion ? p.abstenciones ?? 0 : 0}"
+                  id="abs-${p.id_propuesta}" ${esFirme ? 'disabled' : ''}>
+              </div>
+            </div>
+
+            <div class="resultado-preview" id="preview-${p.id_propuesta}"></div>
+
+            <div class="acciones-row">
+              ${tienVotacion ? `
+                <button class="btn btn-firmar"
+                  onclick="firmarVotacion(${p.id_votacion}, ${id_sesion})">
+                  Firmar acuerdo
+                </button>
+              ` : ''}
+              <button class="btn btn-registrar"
+                onclick="registrarVotacion(${p.id_propuesta}, ${id_sesion})"
+                ${!quorumActual ? 'disabled title="Sin quórum"' : ''}>
+                ${tienVotacion ? 'Actualizar votos' : 'Registrar votación'}
+              </button>
+            </div>
+          ` : `
+            <div class="votos-row">
+              <div class="voto-group favor">
+                <label>A favor</label>
+                <input type="number" value="${p.votos_favor}" disabled>
+              </div>
+              <div class="voto-group contra">
+                <label>En contra</label>
+                <input type="number" value="${p.votos_contra}" disabled>
+              </div>
+              <div class="voto-group">
+                <label>Abstenciones</label>
+                <input type="number" value="${p.abstenciones}" disabled>
+              </div>
+            </div>
+            <p style="font-size:12px;color:#aaa;text-align:right">
+              Votación firmada — no puede modificarse
+            </p>
+          `}
+        </div>
+      `;
+    }).join('');
+
+    lista.innerHTML = bannerHtml + propuestasHtml;
+  }
+
+  // Previsualiza el resultado mientras el usuario escribe los votos
+  function previsualizarResultado(id_propuesta, id_sesion) {
+    const favor  = parseInt(document.getElementById(`favor-${id_propuesta}`).value) || 0;
+    const contra = parseInt(document.getElementById(`contra-${id_propuesta}`).value) || 0;
+    const preview = document.getElementById(`preview-${id_propuesta}`);
+
+    if (favor === 0 && contra === 0) {
+      preview.style.display = 'none';
+      return;
+    }
+
+    // Previsualización simple (mayoría simple)
+    const resultado = favor > contra ? 'Aprobada' : 'Rechazada';
+    preview.className = `resultado-preview resultado-${resultado.toLowerCase()}`;
+    preview.textContent = `Resultado estimado: ${resultado} (${favor} a favor, ${contra} en contra)`;
+    preview.style.display = 'block';
+  }
+
+  async function registrarVotacion(id_propuesta, id_sesion) {
+    const favor  = parseInt(document.getElementById(`favor-${id_propuesta}`).value) || 0;
+    const contra = parseInt(document.getElementById(`contra-${id_propuesta}`).value) || 0;
+    const abs    = parseInt(document.getElementById(`abs-${id_propuesta}`).value)   || 0;
+
+    try {
+      const res = await fetch('/votaciones', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${TOKEN}`
+        },
+        body: JSON.stringify({
+          id_sesion, id_propuesta,
+          votos_favor: favor, votos_contra: contra, abstenciones: abs
+        })
+      });
+
+      const datos = await res.json();
+
+      if (datos.ok) {
+        mostrarAlerta('success', datos.mensaje);
+        await cargarPropuestas(id_sesion);
+      } else {
+        mostrarAlerta('error', datos.mensaje);
+      }
+    } catch (e) {
+      mostrarAlerta('error', 'Error de conexión.');
+    }
+  }
+
+  async function firmarVotacion(id_votacion, id_sesion) {
+    if (!confirm('¿Firmar este acuerdo? Esta acción no se puede deshacer.')) return;
+
+    try {
+      const res = await fetch(`/votaciones/${id_votacion}/firmar`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+
+      const datos = await res.json();
+
+      if (datos.ok) {
+        mostrarAlerta('success', datos.mensaje);
+        await cargarPropuestas(id_sesion);
+      } else {
+        mostrarAlerta('error', datos.mensaje);
+      }
+    } catch (e) {
+      mostrarAlerta('error', 'Error de conexión.');
+    }
+  }
+
+  function mostrarAlerta(tipo, mensaje) {
+    const el = document.getElementById('alertMsg');
+    el.className     = `alert alert-${tipo}`;
+    el.textContent   = mensaje;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+</script>
+
+</body>
+</html>
