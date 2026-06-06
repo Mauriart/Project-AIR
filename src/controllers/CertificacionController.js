@@ -8,6 +8,9 @@ const { generarHash } = require('../services/CryptoService');
 const pool = require('../config/db');
 const { verificarAutenticacion, requierePermiso, requiereRol } = require('./AuthController');
 
+const { renderizarCertificado } = require('../services/TemplateService');
+const { generarPDF } = require('../services/PDFService');
+
 router.get('/preview-folio', verificarAutenticacion, requierePermiso('EMITIR_CERTIFICACION'), async (req, res) => {
 
     try {
@@ -87,5 +90,45 @@ router.post('/:id/anular', verificarAutenticacion, requierePermiso('EMITIR_CERTI
     return res.status(500).json({ ok: false, mensaje: error.message || 'Error interno' });
   }
 });
+
+
+// Endpoint para generar y descargar el certificado en PDF
+router.post('/generar-pdf', verificarAutenticacion, requiereRol('Administrador', 'Secretaría'), async (req, res) => {
+    const { id_asambleista, fecha_inicio, fecha_fin } = req.body;
+    if (!id_asambleista) {
+        return res.status(400).json({ ok: false, mensaje: 'Se requiere id_asambleista' });
+    }
+    try {
+        // 1. Obtener datos consolidados del asambleísta
+        const datos = await CertificacionModel.obtenerDatosCertificacion(id_asambleista, fecha_inicio, fecha_fin);
+        if (!datos || datos.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'No se encontraron datos para el asambleísta' });
+        }
+
+        // 2. Generar HTML temporal para calcular el hash (sin folio aún)
+        let htmlTemp = renderizarCertificado(datos, '{{FOLIO}}', '{{HASH}}');
+        const hash = generarHash(htmlTemp);
+
+        // 3. Emitir certificación (esto guarda en BD y genera folio único)
+        const certificado = await CertificacionModel.emitirCertificacion(id_asambleista, req.usuario.username, hash);
+        const folio = certificado.folio_unico;
+
+        // 4. Generar HTML final con el folio real y el hash
+        const htmlFinal = renderizarCertificado(datos, folio, hash);
+
+        // 5. Generar PDF
+        const pdfBuffer = await generarPDF(htmlFinal);
+
+        // 6. Enviar el PDF como descarga
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="certificado_${folio}.pdf"`);
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Error en /generar-pdf:', error);
+        res.status(500).json({ ok: false, mensaje: error.message || 'Error interno al generar el certificado' });
+    }
+});
+
 
 module.exports = router;
