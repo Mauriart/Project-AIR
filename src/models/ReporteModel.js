@@ -1,5 +1,34 @@
 const pool = require('../config/db');
 
+// Revisa si una columna existe en la tabla indicada.
+async function existeColumna(tabla, columna) {
+  const resultado = await pool.query(`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = $1
+        AND column_name = $2
+    ) AS existe
+  `, [tabla, columna]);
+
+  return resultado.rows[0].existe;
+}
+
+// Revisa si una tabla existe en el esquema publico.
+async function existeTabla(tabla) {
+  const resultado = await pool.query(`
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name = $1
+    ) AS existe
+  `, [tabla]);
+
+  return resultado.rows[0].existe;
+}
+
 // Consulta las metricas administrativas desde las vistas SQL.
 async function obtenerMetricasCertificaciones() {
   const [porMes, porSector, foliosPorAnio] = await Promise.all([
@@ -29,6 +58,9 @@ async function obtenerMetricasCertificaciones() {
 
 // Calcula el porcentaje global de asistencia de un asambleista.
 async function obtenerPorcentajeAsistencia(id_asambleista) {
+  const tieneAsistencia = await existeTabla('asistencia_sesion_plenaria');
+  if (!tieneAsistencia) return 0;
+
   const resultado = await pool.query(`
     SELECT
       CASE
@@ -53,6 +85,27 @@ async function obtenerPorcentajeAsistencia(id_asambleista) {
 // Obtiene las filas que se exportan como aportes administrativos.
 async function obtenerAportesAsambleista(id_asambleista) {
   const porcentaje = await obtenerPorcentajeAsistencia(id_asambleista);
+  const tieneIdAsambleista = await existeColumna('certificacion_emitida', 'id_asambleista');
+  const tieneFolioUnico = await existeColumna('certificacion_emitida', 'folio_unico');
+
+  if (!tieneIdAsambleista) {
+    const folioColumna = tieneFolioUnico ? 'c.folio_unico' : 'c.folio';
+    const resultadoAnterior = await pool.query(`
+      SELECT
+        ${folioColumna} AS folio,
+        TO_CHAR(c.fecha_emision, 'YYYY-MM-DD') AS fecha,
+        COALESCE(a.nombre, c.nombre_solicitante) AS asambleista,
+        'Sin propuestas asociadas' AS propuestas,
+        $2::NUMERIC AS porcentaje_asistencia
+      FROM certificacion_emitida c
+      LEFT JOIN asambleista a
+        ON LOWER(a.nombre) = LOWER(c.nombre_solicitante)
+      WHERE a.asambleista_id = $1
+      ORDER BY c.fecha_emision DESC
+    `, [id_asambleista, porcentaje]);
+
+    return resultadoAnterior.rows;
+  }
 
   const resultado = await pool.query(`
     SELECT
