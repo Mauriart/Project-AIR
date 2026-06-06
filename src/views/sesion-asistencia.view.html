@@ -1,55 +1,19 @@
--- Active: 1779400196548@@localhost@5432@postgres
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIR — Control de Asistencia</title>
+  <title>AIR - Gestion de sesiones</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: #f4f6f8;
+      color: #172033;
       min-height: 100vh;
       padding: 40px 20px;
     }
-
-    .container { max-width: 780px; margin: 0 auto; }
-
-    .page-header { margin-bottom: 24px; }
-    .page-header h1 { font-size: 22px; font-weight: 600; color: #1a1a2e; }
-    .page-header p { font-size: 13px; color: #666; margin-top: 4px; }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: #888;
-      margin-bottom: 16px;
-    }
-
-    /* Selector de sesión */
-    select, input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color .2s;
-    }
-    select:focus, input:focus { border-color: #534AB7; }
 
     .app-navbar {
       position: sticky;
@@ -62,19 +26,12 @@
       background: #12344d;
       color: white;
       padding: 0.75rem 1rem;
-      margin: -40px -20px 20px;
-      border-radius: 0 0 12px 12px;
+      margin: -40px -20px 24px;
+      border-radius: 0 0 8px 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.12);
     }
-    .app-navbar .brand {
-      font-weight: bold;
-    }
-    .app-navbar .links {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
+    .app-navbar .brand { font-weight: 700; }
+    .app-navbar .links { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
     .app-navbar a,
     .app-navbar button {
       color: white;
@@ -88,165 +45,202 @@
     }
     .app-navbar a:hover,
     .app-navbar button:hover,
-    .app-navbar a.activo {
-      background: #2c7da0;
-    }
-    @media (max-width: 700px) {
-      .app-navbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .app-navbar .links {
-        justify-content: flex-start;
-      }
-    }
+    .app-navbar a.activo { background: #2c7da0; }
 
-    /* Panel de quórum */
-    .quorum-panel {
+    .container { max-width: 1100px; margin: 0 auto; }
+    .page-header { margin-bottom: 20px; }
+    .page-header h1 { font-size: 24px; font-weight: 650; }
+    .page-header p { font-size: 13px; color: #647084; margin-top: 4px; }
+
+    .toolbar {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: minmax(260px, 1fr) auto;
       gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .quorum-box {
-      background: #f8f8f8;
-      border-radius: 8px;
-      padding: 14px;
-      text-align: center;
-      border: 1.5px solid #eee;
-    }
-
-    .quorum-box .num {
-      font-size: 28px;
-      font-weight: 600;
-      color: #1a1a2e;
-    }
-
-    .quorum-box .label {
-      font-size: 11px;
-      color: #888;
-      margin-top: 4px;
-    }
-
-    .quorum-box.cumplido { border-color: #5DCAA5; background: #E1F5EE; }
-    .quorum-box.cumplido .num { color: #0F6E56; }
-    .quorum-box.no-cumplido { border-color: #f5c6c6; background: #FCEBEB; }
-    .quorum-box.no-cumplido .num { color: #791F1F; }
-
-    /* Lista de asistencia */
-    .asambleista-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 0.5px solid #f0f0f0;
-    }
-
-    .asambleista-row:last-child { border-bottom: none; }
-
-    .asambleista-info { flex: 1; }
-    .asambleista-info .nombre {
-      font-size: 14px;
-      font-weight: 500;
-      color: #1a1a2e;
-    }
-    .asambleista-info .detalle {
-      font-size: 12px;
-      color: #888;
-      margin-top: 2px;
-    }
-
-    .estado-btns { display: flex; gap: 6px; }
-
-    .estado-btn {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1.5px solid #ddd;
-      background: white;
-      color: #666;
-      transition: all .15s;
-    }
-
-    .estado-btn.selected-presente {
-      background: #E1F5EE;
-      border-color: #5DCAA5;
-      color: #0F6E56;
-    }
-
-    .estado-btn.selected-ausente {
-      background: #FCEBEB;
-      border-color: #f5c6c6;
-      color: #791F1F;
-    }
-
-    .estado-btn.selected-justificado {
-      background: #FAEEDA;
-      border-color: #EF9F27;
-      color: #633806;
-    }
-
-    /* Botones de acción */
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-    }
-
-    .btn {
-      padding: 10px 22px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1.5px solid transparent;
-      transition: all .2s;
-    }
-
-    .btn-outline {
-      background: white;
-      border-color: #ddd;
-      color: #555;
-    }
-    .btn-outline:hover { background: #f5f5f5; }
-
-    .btn-primary {
-      background: #534AB7;
-      color: white;
-    }
-    .btn-primary:hover { background: #3C3489; }
-    .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
-
-    .btn-todos {
-      background: white;
-      border-color: #534AB7;
-      color: #534AB7;
-      font-size: 13px;
-      padding: 7px 14px;
-    }
-    .btn-todos:hover { background: #EEEDFE; }
-
-    /* Alertas */
-    .alert {
-      display: none;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 13px;
+      align-items: end;
       margin-bottom: 16px;
     }
-    .alert-error { background: #FCEBEB; border: 1px solid #f5c6c6; color: #791F1F; }
-    .alert-success { background: #E1F5EE; border: 1px solid #5DCAA5; color: #085041; }
+
+    .panel {
+      background: white;
+      border: 1px solid #dde3ea;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(19, 35, 51, 0.06);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #657386;
+      margin-bottom: 14px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid #dce3eb;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: #526070;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active { color: #12344d; border-bottom-color: #2c7da0; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #344256;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1.5px solid #ccd5df;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      padding: 10px 12px;
+      background: white;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #2c7da0; }
+    textarea { min-height: 88px; resize: vertical; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1.2fr .6fr .6fr; gap: 14px; }
+    .full { grid-column: 1 / -1; }
+
+    .btn-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .btn {
+      border: 1.5px solid transparent;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .btn-primary { background: #12344d; color: white; }
+    .btn-primary:hover { background: #0c2639; }
+    .btn-outline { background: white; color: #12344d; border-color: #9fb0c0; }
+    .btn-outline:hover { background: #eef4f8; }
+    .btn-small { padding: 7px 10px; font-size: 12px; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left;
+      padding: 11px 10px;
+      border-bottom: 1px solid #e6ebf0;
+      font-size: 13px;
+      vertical-align: top;
+    }
+    th { color: #657386; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 650;
+      background: #eef2f6;
+      color: #425166;
+      white-space: nowrap;
+    }
+    .badge-ok { background: #dff3ea; color: #0f684d; }
+    .badge-warn { background: #fff0d8; color: #7a4a00; }
+    .badge-stop { background: #fde4e4; color: #832525; }
+
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .alert-success { background: #dff3ea; border: 1px solid #9fd6bd; color: #0f684d; }
+    .alert-error { background: #fde4e4; border: 1px solid #efb3b3; color: #832525; }
 
     .empty-state {
+      padding: 30px;
       text-align: center;
-      padding: 40px;
-      color: #aaa;
+      color: #8a96a6;
       font-size: 14px;
+      border: 1px dashed #ccd5df;
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+
+    .quorum-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .quorum-box {
+      border: 1px solid #dde3ea;
+      border-radius: 8px;
+      padding: 14px;
+      background: #fafbfc;
+      text-align: center;
+    }
+    .quorum-box .num { font-size: 24px; font-weight: 700; }
+    .quorum-box .label { color: #657386; font-size: 12px; margin-top: 3px; }
+    .quorum-box.cumplido { background: #dff3ea; border-color: #9fd6bd; }
+    .quorum-box.no-cumplido { background: #fde4e4; border-color: #efb3b3; }
+
+    .asambleista-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eef2f6;
+    }
+    .asambleista-row:last-child { border-bottom: 0; }
+    .nombre { font-size: 14px; font-weight: 650; }
+    .detalle { font-size: 12px; color: #657386; margin-top: 2px; }
+    .estado-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .estado-btn {
+      border: 1.5px solid #cbd5df;
+      background: white;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .selected-presente { background: #dff3ea; border-color: #70c4a1; color: #0f684d; }
+    .selected-ausente { background: #fde4e4; border-color: #ef9e9e; color: #832525; }
+    .selected-justificado { background: #fff0d8; border-color: #e3ad52; color: #7a4a00; }
+
+    .resolution-form {
+      display: grid;
+      grid-template-columns: 120px 130px auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .checkline { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; }
+    .checkline input { width: auto; }
+
+    @media (max-width: 760px) {
+      body { padding: 24px 12px; }
+      .app-navbar { margin: -24px -12px 20px; align-items: flex-start; flex-direction: column; }
+      .app-navbar .links { justify-content: flex-start; }
+      .toolbar, .grid, .grid-3, .quorum-panel { grid-template-columns: 1fr; }
+      .asambleista-row, .resolution-form { grid-template-columns: 1fr; }
+      .estado-btns { justify-content: flex-start; }
+      table, thead, tbody, tr, th, td { display: block; }
+      thead { display: none; }
+      tr { border-bottom: 1px solid #dce3eb; padding: 10px 0; }
+      td { border-bottom: 0; padding: 6px 0; }
     }
   </style>
 </head>
@@ -263,94 +257,152 @@
     <a href="/buscador">Buscador</a>
     <a href="/propuesta-nueva">Propuestas</a>
     <a href="/preview-certificacion">Certificaciones</a>
+    <a href="/vista-comisiones">Comisiones</a>
     <a href="/asistencia" class="activo">Sesiones</a>
     <a href="/votaciones-tablero">Votaciones</a>
     <button type="button" id="logoutBtn">Salir</button>
   </div>
 </nav>
-<div class="container">
 
+<main class="container">
   <div class="page-header">
-    <h1>Control de Asistencia</h1>
-    <p>Sistema AIR — Asamblea Institucional Representativa · TEC</p>
+    <h1>Gestion de sesiones</h1>
+    <p>Sistema AIR - Asamblea Institucional Representativa TEC</p>
   </div>
 
-  <!-- Selector de sesión -->
-  <div class="card">
-    <div class="card-title">Seleccionar sesión</div>
-    <select id="selectSesion" onchange="cargarSesion()">
-      <option value="">— Seleccioná una sesión —</option>
-    </select>
+  <div id="alertMsg" class="alert"></div>
+
+  <div class="toolbar">
+    <div>
+      <label for="selectSesion">Sesion activa</label>
+      <select id="selectSesion" onchange="cargarSesionSeleccionada()">
+        <option value="">Seleccione una sesion</option>
+      </select>
+    </div>
+    <button class="btn btn-outline" type="button" onclick="refrescarTodo()">Actualizar</button>
   </div>
 
-  <!-- Panel de quórum -->
-  <div class="card" id="panelQuorum" style="display:none">
-    <div class="card-title">Estado del quórum</div>
-    <div class="quorum-panel">
-      <div class="quorum-box">
-        <div class="num" id="numRequerido">—</div>
-        <div class="label">Quórum requerido</div>
-      </div>
-      <div class="quorum-box" id="boxPresentes">
-        <div class="num" id="numPresentes">0</div>
-        <div class="label">Presentes</div>
-      </div>
-      <div class="quorum-box">
-        <div class="num" id="numAusentes">0</div>
-        <div class="label">Ausentes</div>
-      </div>
-      <div class="quorum-box" id="boxEstado">
-        <div class="num" id="textoEstado">—</div>
-        <div class="label">Estado</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Pase de lista -->
-  <div class="card" id="panelAsistencia" style="display:none">
-    <div class="card-title">Pase de lista</div>
-
-    <div id="alertMsg" class="alert"></div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="font-size:13px;color:#888" id="totalPadron"></span>
-      <button class="btn btn-todos" onclick="marcarTodos(1)">Marcar todos Presente</button>
+  <section class="panel">
+    <div class="tabs">
+      <button class="tab-btn active" type="button" onclick="mostrarTab('datos', this)">Datos</button>
+      <button class="tab-btn" type="button" onclick="mostrarTab('agenda', this)">Agenda</button>
+      <button class="tab-btn" type="button" onclick="mostrarTab('asistencia', this)">Asistencia</button>
     </div>
 
-    <div id="listaPadron">
-      <div class="empty-state">Seleccioná una sesión para cargar el padrón</div>
+    <div id="tab-datos" class="tab-pane active">
+      <div class="section-title">Nueva sesion</div>
+      <form id="formSesion" onsubmit="crearSesion(event)">
+        <div class="grid">
+          <div>
+            <label for="numero_sesion">Numero de sesion</label>
+            <input id="numero_sesion" required maxlength="20" placeholder="AIR-001-2026">
+          </div>
+          <div>
+            <label for="fecha">Fecha</label>
+            <input id="fecha" type="date" required>
+          </div>
+          <div>
+            <label for="id_tipo_sesion">Tipo</label>
+            <select id="id_tipo_sesion" required></select>
+          </div>
+          <div>
+            <label for="id_tipo_modalidad">Modalidad</label>
+            <select id="id_tipo_modalidad" required></select>
+          </div>
+          <div>
+            <label for="quorum">Quorum requerido</label>
+            <input id="quorum" type="number" min="1" required>
+          </div>
+          <div>
+            <label for="link_acta">Link del acta</label>
+            <input id="link_acta" type="url" placeholder="https://...">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnCrearSesion" type="submit">Crear sesion</button>
+        </div>
+      </form>
+
+      <div class="section-title" style="margin-top:22px">Detalle</div>
+      <div id="detalleSesion" class="empty-state">Seleccione una sesion para ver sus datos.</div>
     </div>
 
-    <div class="btn-row">
-      <span style="font-size:12px;color:#aaa">Los cambios se guardan al presionar Guardar</span>
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardarAsistencia()">
-        Guardar asistencia
-      </button>
-    </div>
-  </div>
+    <div id="tab-agenda" class="tab-pane">
+      <div class="section-title">Agregar punto al orden del dia</div>
+      <form id="formAgenda" onsubmit="agregarPuntoAgenda(event)">
+        <div class="grid-3">
+          <div>
+            <label for="id_propuesta_agenda">Propuesta</label>
+            <select id="id_propuesta_agenda" required></select>
+          </div>
+          <div>
+            <label for="orden_agenda">Orden</label>
+            <input id="orden_agenda" type="number" min="1" required>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="btnAgregarPunto" type="submit">Agregar</button>
+          </div>
+          <div class="full">
+            <label for="descripcion_agenda">Descripcion</label>
+            <textarea id="descripcion_agenda" placeholder="Detalle breve del punto"></textarea>
+          </div>
+        </div>
+      </form>
 
-</div>
+      <div class="section-title" style="margin-top:22px">Orden del dia</div>
+      <div id="agendaSesion" class="empty-state">Seleccione una sesion para cargar la agenda.</div>
+    </div>
+
+    <div id="tab-asistencia" class="tab-pane">
+      <div id="panelQuorum" style="display:none">
+        <div class="section-title">Estado del quorum</div>
+        <div class="quorum-panel">
+          <div class="quorum-box">
+            <div class="num" id="numRequerido">-</div>
+            <div class="label">Requerido</div>
+          </div>
+          <div class="quorum-box" id="boxPresentes">
+            <div class="num" id="numPresentes">0</div>
+            <div class="label">Presentes</div>
+          </div>
+          <div class="quorum-box">
+            <div class="num" id="numAusentes">0</div>
+            <div class="label">Ausentes</div>
+          </div>
+          <div class="quorum-box" id="boxEstado">
+            <div class="num" id="textoEstado">-</div>
+            <div class="label">Estado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Pase de lista</div>
+      <div class="btn-row" style="justify-content:space-between;margin-top:0;margin-bottom:12px">
+        <span id="totalPadron" class="detalle"></span>
+        <button class="btn btn-outline btn-small" type="button" onclick="marcarTodos(1)">Marcar todos presente</button>
+      </div>
+      <div id="listaPadron" class="empty-state">Seleccione una sesion para cargar el padron.</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnGuardarAsistencia" type="button" onclick="guardarAsistencia()">Guardar asistencia</button>
+      </div>
+    </div>
+  </section>
+</main>
 
 <script>
-  // =============================================
-  // RESPONSABILIDAD DE LA VISTA:
-  // Mostrar datos, capturar selecciones del usuario
-  // y llamar al controlador via fetch.
-  // Sin lógica de negocio ni cálculos de quórum aquí.
-  // =============================================
-
   const TOKEN = sessionStorage.getItem('airToken');
+  let sesiones = [];
+  let agendaActual = [];
   let padronActual = [];
-  let selecciones  = {}; // { id_asambleista: id_estado_asistencia }
+  let selecciones = {};
 
-  // Estados de asistencia (deben coincidir con la BD)
-  const ESTADOS = {
-    1: { label: 'Presente',    clase: 'selected-presente' },
-    2: { label: 'Ausente',     clase: 'selected-ausente' },
+  const ESTADOS_ASISTENCIA = {
+    1: { label: 'Presente', clase: 'selected-presente' },
+    2: { label: 'Ausente', clase: 'selected-ausente' },
     3: { label: 'Justificado', clase: 'selected-justificado' }
   };
 
-  // Al cargar la página, llena el selector de sesiones
   document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logoutBtn').addEventListener('click', () => {
       sessionStorage.removeItem('airToken');
@@ -359,73 +411,383 @@
       window.location.href = '/login';
     });
 
-    await cargarSesiones();
+    try {
+      document.getElementById('fecha').valueAsDate = new Date();
+      await cargarCatalogos();
+      await refrescarTodo();
+    } catch (error) {
+      console.error(error);
+      mostrarAlerta('error', 'No se pudo cargar la gestion de sesiones.');
+    }
   });
 
+  function headersJson() {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${TOKEN}`
+    };
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function mostrarAlerta(tipo, mensaje) {
+    const el = document.getElementById('alertMsg');
+    el.className = `alert alert-${tipo}`;
+    el.textContent = mensaje;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4500);
+  }
+
+  function mostrarTab(nombre, btn) {
+    document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(`tab-${nombre}`).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  async function cargarCatalogos() {
+    const res = await fetch('/sesiones/catalogos', {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok) throw new Error(datos.mensaje);
+
+    llenarSelect('id_tipo_sesion', datos.data.tipos_sesion, 'id_tipo_sesion');
+    llenarSelect('id_tipo_modalidad', datos.data.modalidades, 'id_tipo_modalidad');
+  }
+
+  function llenarSelect(id, items, valueField) {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="">Seleccione</option>';
+    items.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item[valueField];
+      opt.textContent = item.nombre;
+      select.appendChild(opt);
+    });
+  }
+
+  async function refrescarTodo() {
+    await cargarSesiones();
+    await cargarPropuestasDisponibles();
+    await cargarSesionSeleccionada();
+  }
+
   async function cargarSesiones() {
+    const res = await fetch('/sesiones', {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok) throw new Error(datos.mensaje);
+
+    sesiones = datos.data || [];
+    const select = document.getElementById('selectSesion');
+    const valorActual = select.value;
+    select.innerHTML = '<option value="">Seleccione una sesion</option>';
+
+    sesiones.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id_sesion;
+      opt.textContent = `${s.numero_sesion} - ${s.tipo_sesion} - ${new Date(s.fecha).toLocaleDateString('es-CR')}`;
+      select.appendChild(opt);
+    });
+
+    if (valorActual) select.value = valorActual;
+  }
+
+  async function cargarPropuestasDisponibles() {
+    const res = await fetch('/sesiones/propuestas-disponibles', {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    const select = document.getElementById('id_propuesta_agenda');
+    select.innerHTML = '<option value="">Seleccione una propuesta</option>';
+
+    if (!datos.ok || !datos.data?.length) {
+      select.innerHTML = '<option value="">No hay propuestas disponibles</option>';
+      return;
+    }
+
+    datos.data.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id_propuesta;
+      opt.textContent = `${p.codigo_air || `P-${p.id_propuesta}`} - ${p.titulo} (${p.estado})`;
+      select.appendChild(opt);
+    });
+  }
+
+  async function crearSesion(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btnCrearSesion');
+    btn.disabled = true;
+
+    const payload = {
+      numero_sesion: document.getElementById('numero_sesion').value.trim(),
+      fecha: document.getElementById('fecha').value,
+      id_tipo_sesion: Number(document.getElementById('id_tipo_sesion').value),
+      id_tipo_modalidad: Number(document.getElementById('id_tipo_modalidad').value),
+      quorum: Number(document.getElementById('quorum').value),
+      link_acta: document.getElementById('link_acta').value.trim() || null
+    };
+
     try {
       const res = await fetch('/sesiones', {
-        headers: { 'Authorization': `Bearer ${TOKEN}` }
+        method: 'POST',
+        headers: headersJson(),
+        body: JSON.stringify(payload)
       });
       const datos = await res.json();
-      const select = document.getElementById('selectSesion');
 
-      datos.data.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id_sesion;
-        opt.textContent = `${s.numero_sesion} · ${s.tipo_sesion} · ${new Date(s.fecha).toLocaleDateString('es-CR')}`;
-        select.appendChild(opt);
-      });
-    } catch (e) {
-      console.error('Error cargando sesiones:', e);
+      if (!datos.ok) {
+        mostrarAlerta('error', datos.mensaje || 'No se pudo crear la sesion.');
+        return;
+      }
+
+      mostrarAlerta('success', 'Sesion creada correctamente.');
+      document.getElementById('formSesion').reset();
+      document.getElementById('fecha').valueAsDate = new Date();
+      await cargarSesiones();
+      document.getElementById('selectSesion').value = datos.data.id_sesion;
+      await cargarSesionSeleccionada();
+    } catch (error) {
+      mostrarAlerta('error', 'Error de conexion al crear la sesion.');
+    } finally {
+      btn.disabled = false;
     }
   }
 
-  async function cargarSesion() {
-    const id_sesion = document.getElementById('selectSesion').value;
-    if (!id_sesion) return;
+  async function cargarSesionSeleccionada() {
+    const idSesion = document.getElementById('selectSesion').value;
+    if (!idSesion) {
+      document.getElementById('detalleSesion').className = 'empty-state';
+      document.getElementById('detalleSesion').innerHTML = 'Seleccione una sesion para ver sus datos.';
+      document.getElementById('agendaSesion').className = 'empty-state';
+      document.getElementById('agendaSesion').innerHTML = 'Seleccione una sesion para cargar la agenda.';
+      document.getElementById('listaPadron').className = 'empty-state';
+      document.getElementById('listaPadron').innerHTML = 'Seleccione una sesion para cargar el padron.';
+      document.getElementById('panelQuorum').style.display = 'none';
+      return;
+    }
 
-    await cargarPadron(id_sesion);
-    await actualizarQuorum(id_sesion);
-
-    document.getElementById('panelQuorum').style.display = 'block';
-    document.getElementById('panelAsistencia').style.display = 'block';
+    await Promise.all([
+      cargarDetalleSesion(idSesion),
+      cargarAgenda(idSesion),
+      cargarPadron(idSesion),
+      actualizarQuorum(idSesion)
+    ]);
   }
 
-  async function cargarPadron(id_sesion) {
-    try {
-      const res = await fetch(`/sesiones/${id_sesion}/padron`, {
-        headers: { 'Authorization': `Bearer ${TOKEN}` }
-      });
-      const datos = await res.json();
-      padronActual = datos.data;
+  async function cargarDetalleSesion(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok) return;
+    const s = datos.data;
 
-      document.getElementById('totalPadron').textContent =
-        `${padronActual.length} asambleístas en el padrón activo`;
+    document.getElementById('detalleSesion').className = '';
+    document.getElementById('detalleSesion').innerHTML = `
+      <table>
+        <tbody>
+          <tr><th>Numero</th><td>${escapeHtml(s.numero_sesion)}</td></tr>
+          <tr><th>Fecha</th><td>${new Date(s.fecha).toLocaleDateString('es-CR')}</td></tr>
+          <tr><th>Tipo</th><td>${escapeHtml(s.tipo_sesion)}</td></tr>
+          <tr><th>Modalidad</th><td>${escapeHtml(s.modalidad)}</td></tr>
+          <tr><th>Quorum</th><td>${escapeHtml(s.quorum)}</td></tr>
+        </tbody>
+      </table>
+    `;
+  }
 
-      renderPadron();
-    } catch (e) {
-      console.error('Error cargando padrón:', e);
+  async function cargarAgenda(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}/agenda`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    agendaActual = datos.ok ? datos.data : [];
+    document.getElementById('orden_agenda').value = agendaActual.length + 1;
+    renderAgenda();
+  }
+
+  function claseEstado(estado) {
+    const normalizado = String(estado || '').toLowerCase();
+    if (normalizado === 'aprobada') return 'badge badge-ok';
+    if (normalizado === 'rechazada') return 'badge badge-stop';
+    return 'badge badge-warn';
+  }
+
+  function renderAgenda() {
+    const contenedor = document.getElementById('agendaSesion');
+    if (!agendaActual.length) {
+      contenedor.className = 'empty-state';
+      contenedor.innerHTML = 'No hay puntos en el orden del dia.';
+      return;
     }
+
+    contenedor.className = '';
+    contenedor.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Propuesta</th>
+            <th>Estado</th>
+            <th>Resolucion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${agendaActual.map(p => `
+            <tr>
+              <td>${escapeHtml(p.orden)}</td>
+              <td>
+                <strong>${escapeHtml(p.propuesta)}</strong>
+                <div class="detalle">${escapeHtml(p.codigo_air || `P-${p.id_propuesta}`)}</div>
+                ${p.descripcion ? `<div class="detalle">${escapeHtml(p.descripcion)}</div>` : ''}
+              </td>
+              <td><span class="${claseEstado(p.estado_propuesta)}">${escapeHtml(p.estado_propuesta)}</span></td>
+              <td>${renderResolucion(p)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderResolucion(punto) {
+    if (punto.numero_resolucion) {
+      return `
+        <span class="badge badge-ok">${escapeHtml(punto.numero_resolucion)}</span>
+        <div class="detalle">${new Date(punto.fecha_emision).toLocaleDateString('es-CR')}</div>
+      `;
+    }
+
+    return `
+      <div class="resolution-form">
+        <input id="res-num-${punto.id_punto_agenda}" maxlength="20" placeholder="AIR-000">
+        <input id="res-fecha-${punto.id_punto_agenda}" type="date" value="${new Date().toISOString().slice(0, 10)}">
+        <label class="checkline">
+          <input id="res-aprobada-${punto.id_punto_agenda}" type="checkbox" checked>
+          Aprobada
+        </label>
+        <button class="btn btn-primary btn-small" type="button" onclick="registrarResolucion(${punto.id_punto_agenda})">
+          Registrar
+        </button>
+      </div>
+    `;
+  }
+
+  async function agregarPuntoAgenda(event) {
+    event.preventDefault();
+    const idSesion = document.getElementById('selectSesion').value;
+    if (!idSesion) {
+      mostrarAlerta('error', 'Seleccione una sesion primero.');
+      return;
+    }
+
+    const payload = {
+      id_propuesta: Number(document.getElementById('id_propuesta_agenda').value),
+      orden: Number(document.getElementById('orden_agenda').value),
+      descripcion: document.getElementById('descripcion_agenda').value.trim() || null
+    };
+
+    const res = await fetch(`/sesiones/${idSesion}/agenda`, {
+      method: 'POST',
+      headers: headersJson(),
+      body: JSON.stringify(payload)
+    });
+    const datos = await res.json();
+
+    if (!datos.ok) {
+      mostrarAlerta('error', datos.mensaje || 'No se pudo agregar el punto.');
+      return;
+    }
+
+    mostrarAlerta('success', 'Punto agregado al orden del dia.');
+    document.getElementById('formAgenda').reset();
+    await cargarAgenda(idSesion);
+    await cargarPropuestasDisponibles();
+  }
+
+  async function registrarResolucion(idPuntoAgenda) {
+    const idSesion = document.getElementById('selectSesion').value;
+    const numero = document.getElementById(`res-num-${idPuntoAgenda}`).value.trim();
+    const fecha = document.getElementById(`res-fecha-${idPuntoAgenda}`).value;
+    const aprobada = document.getElementById(`res-aprobada-${idPuntoAgenda}`).checked;
+
+    if (!numero || !fecha) {
+      mostrarAlerta('error', 'Digite el numero y fecha de resolucion.');
+      return;
+    }
+
+    const res = await fetch(`/sesiones/${idSesion}/agenda/${idPuntoAgenda}/resolucion`, {
+      method: 'POST',
+      headers: headersJson(),
+      body: JSON.stringify({ numero_resolucion: numero, fecha_emision: fecha, aprobada })
+    });
+    const datos = await res.json();
+
+    if (!datos.ok) {
+      mostrarAlerta('error', datos.mensaje || 'No se pudo registrar la resolucion.');
+      return;
+    }
+
+    mostrarAlerta('success', datos.mensaje || 'Resolucion registrada.');
+    await cargarAgenda(idSesion);
+    await cargarPropuestasDisponibles();
+  }
+
+  async function cargarPadron(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}/padron`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    padronActual = datos.ok ? datos.data : [];
+    selecciones = await cargarAsistenciaRegistrada(idSesion);
+
+    document.getElementById('totalPadron').textContent =
+      `${padronActual.length} asambleistas en el padron activo`;
+    renderPadron();
+  }
+
+  async function cargarAsistenciaRegistrada(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}/asistencia`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok || !datos.data?.length) return {};
+
+    return datos.data.reduce((seleccion, asistencia) => {
+      seleccion[asistencia.asambleista_id] = asistencia.id_estado_asistencia;
+      return seleccion;
+    }, {});
   }
 
   function renderPadron() {
     const lista = document.getElementById('listaPadron');
-
-    if (padronActual.length === 0) {
-      lista.innerHTML = '<div class="empty-state">No hay asambleístas activos en el padrón</div>';
+    if (!padronActual.length) {
+      lista.className = 'empty-state';
+      lista.innerHTML = 'No hay asambleistas activos en el padron.';
       return;
     }
 
+    lista.className = '';
     lista.innerHTML = padronActual.map(a => `
       <div class="asambleista-row">
-        <div class="asambleista-info">
-          <div class="nombre">${a.nombre}</div>
-          <div class="detalle">${a.cedula} · ${a.sector}</div>
+        <div>
+          <div class="nombre">${escapeHtml(a.nombre)}</div>
+          <div class="detalle">${escapeHtml(a.cedula)} - ${escapeHtml(a.sector)}</div>
         </div>
         <div class="estado-btns">
-          ${Object.entries(ESTADOS).map(([id, est]) => `
+          ${Object.entries(ESTADOS_ASISTENCIA).map(([id, est]) => `
             <button
+              type="button"
               class="estado-btn ${selecciones[a.asambleista_id] == id ? est.clase : ''}"
               onclick="seleccionarEstado(${a.asambleista_id}, ${id}, this, '${est.clase}')"
             >${est.label}</button>
@@ -435,96 +797,73 @@
     `).join('');
   }
 
-  function seleccionarEstado(id_asambleista, id_estado, btn, clase) {
-    // Guardar la selección
-    selecciones[id_asambleista] = id_estado;
-
-    // Actualizar visual — quitar clases de los hermanos y marcar el seleccionado
-    const fila = btn.closest('.asambleista-row');
-    fila.querySelectorAll('.estado-btn').forEach(b => {
+  function seleccionarEstado(idAsambleista, idEstado, btn, clase) {
+    selecciones[idAsambleista] = idEstado;
+    btn.closest('.asambleista-row').querySelectorAll('.estado-btn').forEach(b => {
       b.className = 'estado-btn';
     });
     btn.classList.add(clase);
   }
 
-  function marcarTodos(id_estado) {
+  function marcarTodos(idEstado) {
     padronActual.forEach(a => {
-      selecciones[a.asambleista_id] = id_estado;
+      selecciones[a.asambleista_id] = idEstado;
     });
     renderPadron();
   }
 
   async function guardarAsistencia() {
-    const id_sesion = document.getElementById('selectSesion').value;
+    const idSesion = document.getElementById('selectSesion').value;
+    if (!idSesion) {
+      mostrarAlerta('error', 'Seleccione una sesion primero.');
+      return;
+    }
 
-    // Armar la lista de asistencias con las selecciones actuales
     const asistencias = padronActual.map(a => ({
-      id_asambleista:       a.asambleista_id,
-      id_estado_asistencia: selecciones[a.asambleista_id] || 2 // default Ausente
+      id_asambleista: a.asambleista_id,
+      id_estado_asistencia: selecciones[a.asambleista_id] || 2
     }));
 
-    const btn = document.getElementById('btnGuardar');
-    btn.disabled    = true;
-    btn.textContent = 'Guardando...';
+    const btn = document.getElementById('btnGuardarAsistencia');
+    btn.disabled = true;
 
     try {
-      const res = await fetch(`/sesiones/${id_sesion}/asistencia`, {
+      const res = await fetch(`/sesiones/${idSesion}/asistencia`, {
         method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${TOKEN}`
-        },
+        headers: headersJson(),
         body: JSON.stringify({ asistencias })
       });
-
       const datos = await res.json();
 
-      if (datos.ok) {
-        mostrarAlerta('success', 'Asistencia guardada correctamente.');
-        await actualizarQuorum(id_sesion);
-      } else {
-        mostrarAlerta('error', datos.mensaje);
+      if (!datos.ok) {
+        mostrarAlerta('error', datos.mensaje || 'No se pudo guardar la asistencia.');
+        return;
       }
-    } catch (e) {
-      mostrarAlerta('error', 'Error de conexión. Intentá de nuevo.');
+
+      mostrarAlerta('success', 'Asistencia guardada correctamente.');
+      await actualizarQuorum(idSesion);
     } finally {
-      btn.disabled    = false;
-      btn.textContent = 'Guardar asistencia';
+      btn.disabled = false;
     }
   }
 
-  async function actualizarQuorum(id_sesion) {
-    try {
-      const res = await fetch(`/sesiones/${id_sesion}/quorum`, {
-        headers: { 'Authorization': `Bearer ${TOKEN}` }
-      });
-      const datos = await res.json();
+  async function actualizarQuorum(idSesion) {
+    const res = await fetch(`/sesiones/${idSesion}/quorum`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    const datos = await res.json();
+    if (!datos.ok || !datos.data) return;
 
-      if (!datos.ok || !datos.data) return;
+    const d = datos.data;
+    document.getElementById('panelQuorum').style.display = 'block';
+    document.getElementById('numRequerido').textContent = d.quorum_requerido;
+    document.getElementById('numPresentes').textContent = d.total_presentes;
+    document.getElementById('numAusentes').textContent = d.total_ausentes;
+    document.getElementById('textoEstado').textContent = d.quorum_cumplido ? 'OK' : 'Falta';
 
-      const d = datos.data;
-
-      document.getElementById('numRequerido').textContent  = d.quorum_requerido;
-      document.getElementById('numPresentes').textContent  = d.total_presentes;
-      document.getElementById('numAusentes').textContent   = d.total_ausentes;
-      document.getElementById('textoEstado').textContent   = d.quorum_cumplido ? '✓ OK' : '✗ Falta';
-
-      const boxEstado = document.getElementById('boxEstado');
-      boxEstado.className = 'quorum-box ' + (d.quorum_cumplido ? 'cumplido' : 'no-cumplido');
-
-    } catch (e) {
-      console.error('Error actualizando quórum:', e);
-    }
-  }
-
-  function mostrarAlerta(tipo, mensaje) {
-    const el = document.getElementById('alertMsg');
-    el.className     = `alert alert-${tipo}`;
-    el.textContent   = mensaje;
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 4000);
+    const boxEstado = document.getElementById('boxEstado');
+    boxEstado.className = 'quorum-box ' + (d.quorum_cumplido ? 'cumplido' : 'no-cumplido');
   }
 </script>
-
 </body>
 </html>

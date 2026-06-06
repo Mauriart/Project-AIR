@@ -218,6 +218,9 @@ create table sesiones(
   link_acta VARCHAR(200),
   quorum int not null,
 
+  constraint uq_sesion_numero
+    unique (numero_sesion),
+
   constraint fk_sesion_modalidad
     foreign key (id_tipo_modalidad)
     references catalogo_tipo_modalidad(id_tipo_modalidad),
@@ -273,7 +276,13 @@ create table punto_agenda(
 
   constraint fk_agenda_propuesta
     foreign key (id_propuesta)
-    references propuesta(id_propuesta)
+    references propuesta(id_propuesta),
+
+  constraint uq_agenda_sesion_propuesta
+    unique (id_sesion, id_propuesta),
+
+  constraint uq_agenda_sesion_orden
+    unique (id_sesion, orden)
 );
 
 create table resolucion_propuesta(
@@ -284,7 +293,13 @@ create table resolucion_propuesta(
 
   constraint fk_resolucion_agenda
     foreign key (id_punto_agenda)
-    references punto_agenda(id_punto_agenda)
+    references punto_agenda(id_punto_agenda),
+
+  constraint uq_resolucion_punto_agenda
+    unique (id_punto_agenda),
+
+  constraint uq_resolucion_numero
+    unique (numero_resolucion)
 );
 
 -- elementos del sprint 2 (03_asambleistas.sql)

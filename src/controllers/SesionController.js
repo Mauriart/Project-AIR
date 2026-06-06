@@ -4,6 +4,8 @@ const router  = express.Router();
 const SesionModel = require('../models/SesionModel');
 const { verificarAutenticacion, requiereRol } = require('./AuthController');
 
+const ROLES_GESTION_SESIONES = ['Administrador', 'Secretaría'];
+
 // GET /sesiones
 // Lista todas las sesiones
 router.get('/', verificarAutenticacion, async (req, res) => {
@@ -12,6 +14,30 @@ router.get('/', verificarAutenticacion, async (req, res) => {
     return res.status(200).json({ ok: true, data: sesiones });
   } catch (error) {
     console.error('Error obteniendo sesiones:', error);
+    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
+  }
+});
+
+// GET /sesiones/catalogos
+// Devuelve catálogos necesarios para crear sesiones
+router.get('/catalogos', verificarAutenticacion, async (req, res) => {
+  try {
+    const catalogos = await SesionModel.obtenerCatalogosSesion();
+    return res.status(200).json({ ok: true, data: catalogos });
+  } catch (error) {
+    console.error('Error obteniendo catálogos de sesión:', error);
+    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
+  }
+});
+
+// GET /sesiones/propuestas-disponibles
+// Propuestas que todavía pueden agregarse a una agenda
+router.get('/propuestas-disponibles', verificarAutenticacion, async (req, res) => {
+  try {
+    const propuestas = await SesionModel.obtenerPropuestasElegiblesAgenda();
+    return res.status(200).json({ ok: true, data: propuestas });
+  } catch (error) {
+    console.error('Error obteniendo propuestas disponibles:', error);
     return res.status(500).json({ ok: false, mensaje: 'Error interno' });
   }
 });
@@ -33,7 +59,7 @@ router.get('/:id', verificarAutenticacion, async (req, res) => {
 
 // POST /sesiones
 // Crea una nueva sesión
-router.post('/', verificarAutenticacion, requiereRol('Administrador', 'Secretaría'),
+router.post('/', verificarAutenticacion, requiereRol(...ROLES_GESTION_SESIONES),
 async (req, res) => {
   const { id_tipo_modalidad, id_tipo_sesion, numero_sesion, fecha, quorum } = req.body;
 
@@ -60,6 +86,77 @@ async (req, res) => {
   }
 });
 
+// GET /sesiones/:id/agenda
+// Lista el orden del día de una sesión
+router.get('/:id/agenda', verificarAutenticacion, async (req, res) => {
+  try {
+    const agenda = await SesionModel.obtenerAgendaSesion(req.params.id);
+    return res.status(200).json({ ok: true, data: agenda });
+  } catch (error) {
+    console.error('Error obteniendo agenda:', error);
+    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
+  }
+});
+
+// POST /sesiones/:id/agenda
+// Agrega una propuesta al orden del día
+router.post('/:id/agenda', verificarAutenticacion, requiereRol(...ROLES_GESTION_SESIONES),
+async (req, res) => {
+  const { id_propuesta, orden } = req.body;
+
+  if (!id_propuesta || !orden) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'Faltan campos obligatorios: id_propuesta, orden'
+    });
+  }
+
+  if (Number(orden) <= 0) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'El orden debe ser mayor a 0'
+    });
+  }
+
+  try {
+    const punto = await SesionModel.agregarPuntoAgenda(req.params.id, req.body);
+    return res.status(201).json({ ok: true, data: punto });
+  } catch (error) {
+    console.error('Error agregando punto de agenda:', error);
+    return res.status(400).json({ ok: false, mensaje: error.message || 'Error interno' });
+  }
+});
+
+// POST /sesiones/:id/agenda/:punto/resolucion
+// Registra la resolución oficial de un punto de agenda
+router.post('/:id/agenda/:punto/resolucion', verificarAutenticacion,
+requiereRol(...ROLES_GESTION_SESIONES), async (req, res) => {
+  const { numero_resolucion, fecha_emision, aprobada } = req.body;
+
+  if (!numero_resolucion || !fecha_emision || aprobada === undefined) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'Faltan campos obligatorios: numero_resolucion, fecha_emision, aprobada'
+    });
+  }
+
+  try {
+    const resolucion = await SesionModel.registrarResolucionAgenda(
+      req.params.id,
+      req.params.punto,
+      req.body
+    );
+    return res.status(201).json({
+      ok: true,
+      data: resolucion,
+      mensaje: aprobada ? 'Resolución registrada y propuesta aprobada' : 'Resolución registrada'
+    });
+  } catch (error) {
+    console.error('Error registrando resolución:', error);
+    return res.status(400).json({ ok: false, mensaje: error.message || 'Error interno' });
+  }
+});
+
 // GET /sesiones/:id/padron
 // Obtiene el padrón de asambleístas activos para el pase de lista
 router.get('/:id/padron', verificarAutenticacion, async (req, res) => {
@@ -72,10 +169,22 @@ router.get('/:id/padron', verificarAutenticacion, async (req, res) => {
   }
 });
 
+// GET /sesiones/:id/asistencia
+// Obtiene la asistencia registrada de una sesión
+router.get('/:id/asistencia', verificarAutenticacion, async (req, res) => {
+  try {
+    const asistencia = await SesionModel.obtenerAsistenciaSesion(req.params.id);
+    return res.status(200).json({ ok: true, data: asistencia });
+  } catch (error) {
+    console.error('Error obteniendo asistencia:', error);
+    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
+  }
+});
+
 // POST /sesiones/:id/asistencia
 // Registra el pase de lista de una sesión
 router.post('/:id/asistencia', verificarAutenticacion,
-requiereRol('Administrador', 'Secretaría'), async (req, res) => {
+requiereRol(...ROLES_GESTION_SESIONES), async (req, res) => {
   const { asistencias } = req.body;
   const id_sesion = req.params.id;
 
