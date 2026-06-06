@@ -83,6 +83,10 @@ app.get('/preview-certificacion', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
 });
 
+app.get('/vista-reportes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/reportes.view.html'));
+});
+
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {
     res.json({ ok: true, mensaje: `Hola ${req.usuario.username}` });
 });
