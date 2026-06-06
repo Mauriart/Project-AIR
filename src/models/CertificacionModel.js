@@ -58,6 +58,21 @@ const obtenerPorFolio = async (folio) => {
   return resultado.rows[0] || null;
 };
 
+const obtenerDatosCertificacion = async (asambleistaId, fechaInicio = null, fechaFin = null) => {
+    let query = `
+        SELECT * FROM vista_certificacion 
+        WHERE asambleista_id = $1
+    `;
+    const params = [asambleistaId];
+    if (fechaInicio && fechaFin) {
+        query += ` AND sesion_fecha BETWEEN $2 AND $3`;
+        params.push(fechaInicio, fechaFin);
+    }
+    query += ` ORDER BY sesion_fecha DESC`;
+    const result = await pool.query(query, params);
+    return result.rows;
+};
+
 const emitirCertificacion = async (id_asambleista, usuario_secretaria, hash) => {
   const resultado = await pool.query(`
     INSERT INTO certificacion_emitida (id_asambleista, hash_seguridad, usuario_secretaria)
@@ -86,5 +101,6 @@ module.exports = {
   obtenerCertificaciones,
   obtenerPorFolio,
   emitirCertificacion,
-  anularCertificacion
+  anularCertificacion,
+  obtenerDatosCertificacion
 };
