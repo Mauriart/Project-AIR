@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes AIR</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f8;
+      color: #172033;
+    }
+
+    .app-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: #12344d;
+      color: white;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    .app-navbar .brand { font-weight: 700; }
+    .app-navbar .links {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .app-navbar a,
+    .app-navbar button {
+      color: white;
+      text-decoration: none;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      padding: 0.45rem 0.7rem;
+      font: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .app-navbar a:hover,
+    .app-navbar button:hover,
+    .app-navbar a.activo { background: #2c7da0; }
+
+    .container {
+      width: min(100% - 2rem, 1160px);
+      margin: 1.25rem auto 2rem;
+    }
+
+    .page-header {
+      margin-bottom: 1rem;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      font-weight: 650;
+    }
+
+    .page-header p {
+      margin: .25rem 0 0;
+      color: #657386;
+      font-size: .92rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .metric-card,
+    .panel {
+      background: white;
+      border: 1px solid #dde3ea;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(19, 35, 51, 0.06);
+    }
+
+    .metric-card {
+      padding: 1rem;
+    }
+
+    .metric-label {
+      color: #657386;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: .35rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #12344d;
+    }
+
+    .panel {
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .85rem;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: #344256;
+      font-size: .95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e6ebf0;
+      padding: .7rem .6rem;
+      text-align: left;
+      font-size: .92rem;
+    }
+
+    th {
+      color: #657386;
+      background: #f7f9fb;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .export-grid {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: .75rem;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      color: #344256;
+      font-size: .85rem;
+      font-weight: 650;
+      margin-bottom: .35rem;
+    }
+
+    input {
+      width: 100%;
+      min-height: 38px;
+      padding: .5rem .65rem;
+      border: 1.5px solid #ccd5df;
+      border-radius: 6px;
+      font: inherit;
+      background: white;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2c7da0;
+    }
+
+    button.action {
+      min-height: 38px;
+      background: #12344d;
+      color: white;
+      border: 1px solid #12344d;
+      border-radius: 6px;
+      padding: .5rem .9rem;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button.action:hover { background: #0c2639; }
+    button.action:disabled { opacity: .6; cursor: not-allowed; }
+
+    .alert {
+      display: none;
+      padding: .75rem .85rem;
+      border-radius: 6px;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+    }
+
+    .alert-error {
+      background: #fde4e4;
+      border: 1px solid #efb3b3;
+      color: #832525;
+    }
+
+    .alert-success {
+      background: #dff3ea;
+      border: 1px solid #9fd6bd;
+      color: #0f684d;
+    }
+
+    .empty-state {
+      padding: 1.25rem;
+      color: #8a96a6;
+      text-align: center;
+      border: 1px dashed #ccd5df;
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+
+    @media (max-width: 760px) {
+      .app-navbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .app-navbar .links {
+        justify-content: flex-start;
+      }
+      .summary-grid,
+      .export-grid {
+        grid-template-columns: 1fr;
+      }
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+<script>
+  if (!sessionStorage.getItem('airToken')) {
+    window.location.replace('/login');
+  }
+</script>
+
+<nav class="app-navbar">
+  <div class="brand">AIR</div>
+  <div class="links">
+    <a href="/buscador">Buscador</a>
+    <a href="/propuesta-nueva">Propuestas</a>
+    <a href="/preview-certificacion">Certificaciones</a>
+    <a href="/vista-comisiones">Comisiones</a>
+    <a href="/asistencia">Sesiones</a>
+    <a href="/votaciones-tablero">Votaciones</a>
+    <a href="/vista-reportes" class="activo">Reportes</a>
+    <button type="button" id="logoutBtn">Salir</button>
+  </div>
+</nav>
+
+<main class="container">
+  <header class="page-header">
+    <h1>Reportes</h1>
+    <p>Metricas administrativas de certificaciones, folios y aportes.</p>
+  </header>
+
+  <div id="alertMsg" class="alert"></div>
+
+  <section class="summary-grid">
+    <article class="metric-card">
+      <div class="metric-label">Certificaciones</div>
+      <div class="metric-value" id="totalCertificaciones">0</div>
+    </article>
+    <article class="metric-card">
+      <div class="metric-label">Folios del anio</div>
+      <div class="metric-value" id="foliosAnio">0</div>
+    </article>
+    <article class="metric-card">
+      <div class="metric-label">Sectores</div>
+      <div class="metric-value" id="totalSectores">0</div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Certificaciones por mes</h2>
+      <button class="action" type="button" onclick="cargarMetricas()">Actualizar</button>
+    </div>
+    <div id="tablaMeses"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Certificaciones por sector</h2>
+    </div>
+    <div id="tablaSectores"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Folios por anio</h2>
+    </div>
+    <div id="tablaAnios"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">Exportar aportes</h2>
+    </div>
+    <div class="export-grid">
+      <div>
+        <label for="idAsambleista">ID de asambleista</label>
+        <input id="idAsambleista" type="number" min="1" placeholder="Ej. 1">
+      </div>
+      <button class="action" type="button" onclick="descargarCsv()">Descargar CSV</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  const TOKEN = sessionStorage.getItem('airToken');
+
+  // Configura salida de sesion y carga inicial de metricas.
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('airToken');
+      sessionStorage.removeItem('airRoles');
+      sessionStorage.removeItem('airPermisos');
+      window.location.href = '/login';
+    });
+
+    await cargarMetricas();
+  });
+
+  // Muestra mensajes breves del flujo de reportes.
+  function mostrarAlerta(tipo, mensaje) {
+    const alerta = document.getElementById('alertMsg');
+    alerta.className = `alert alert-${tipo}`;
+    alerta.textContent = mensaje;
+    alerta.style.display = 'block';
+  }
+
+  // Renderiza tablas simples para las metricas administrativas.
+  function renderTabla(contenedorId, columnas, filas) {
+    const contenedor = document.getElementById(contenedorId);
+    if (!filas.length) {
+      contenedor.innerHTML = '<div class="empty-state">No hay datos registrados.</div>';
+      return;
+    }
+
+    contenedor.innerHTML = `
+      <table>
+        <thead>
+          <tr>${columnas.map(col => `<th>${col.label}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${filas.map(fila => `
+            <tr>
+              ${columnas.map(col => `<td>${fila[col.key] ?? ''}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // Obtiene metricas en tiempo real desde la base de datos.
+  async function cargarMetricas() {
+    try {
+      const res = await fetch('/reportes/certificaciones', {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      const datos = await res.json();
+      if (!res.ok || !datos.ok) {
+        throw new Error(datos.mensaje || 'No se pudieron cargar los reportes.');
+      }
+
+      const metricas = datos.data;
+      const porMes = metricas.certificaciones_por_mes || [];
+      const porSector = metricas.certificaciones_por_sector || [];
+      const porAnio = metricas.folios_por_anio || [];
+
+      document.getElementById('totalCertificaciones').textContent =
+        porMes.reduce((total, fila) => total + Number(fila.total_certificaciones || 0), 0);
+      document.getElementById('foliosAnio').textContent =
+        porAnio[0]?.total_folios || 0;
+      document.getElementById('totalSectores').textContent =
+        porSector.length;
+
+      renderTabla('tablaMeses', [
+        { key: 'periodo', label: 'Periodo' },
+        { key: 'total_certificaciones', label: 'Total' }
+      ], porMes);
+
+      renderTabla('tablaSectores', [
+        { key: 'sector', label: 'Sector' },
+        { key: 'total_certificaciones', label: 'Total' }
+      ], porSector);
+
+      renderTabla('tablaAnios', [
+        { key: 'anio', label: 'Anio' },
+        { key: 'total_folios', label: 'Folios' }
+      ], porAnio);
+    } catch (error) {
+      mostrarAlerta('error', error.message);
+    }
+  }
+
+  // Descarga el CSV de aportes del asambleista indicado.
+  async function descargarCsv() {
+    const id = document.getElementById('idAsambleista').value;
+    if (!id) {
+      mostrarAlerta('error', 'Ingrese el ID del asambleista.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/reportes/exportar/${id}`, {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      });
+      if (!res.ok) {
+        const datos = await res.json();
+        throw new Error(datos.mensaje || 'No se pudo generar el CSV.');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `aportes-asambleista-${id}.csv`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+      mostrarAlerta('success', 'CSV generado correctamente.');
+    } catch (error) {
+      mostrarAlerta('error', error.message);
+    }
+  }
+</script>
+</body>
+</html>

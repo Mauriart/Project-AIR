@@ -481,6 +481,38 @@ Vista que consolida la información de asambleístas con su nombramiento activo,
 
 ---
 
+### vw_reporte_certificaciones_mes
+Vista administrativa para consultar el total de certificaciones emitidas por mes.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| anio | certificacion_emitida.fecha_emision | Año de emisión |
+| mes | certificacion_emitida.fecha_emision | Mes de emisión |
+| periodo | calculado | Período con formato YYYY-MM |
+| total_certificaciones | certificacion_emitida | Total de certificaciones emitidas en el período |
+
+---
+
+### vw_reporte_certificaciones_sector
+Vista administrativa para consultar certificaciones emitidas por sector de representación.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| sector | catalogo_sector.nombre | Sector vigente del asambleísta al momento de emitir la certificación |
+| total_certificaciones | certificacion_emitida | Total de certificaciones emitidas para ese sector |
+
+---
+
+### vw_reporte_folios_anio
+Vista administrativa para consultar el conteo de folios emitidos por año.
+
+| Campo | Origen | Descripción |
+|-------|--------|-------------|
+| anio | certificacion_emitida.fecha_emision | Año de emisión del folio |
+| total_folios | certificacion_emitida.folio_unico | Total de folios emitidos en ese año |
+
+---
+
 ## 7. Triggers y Funciones
 
 ### tg_vigencia_normativa

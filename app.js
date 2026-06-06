@@ -16,6 +16,7 @@ const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
 const comisionRoutes = require('./src/controllers/ComisionController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
+const reporteRoutes = require('./src/controllers/ReporteController');
 const asambleistaController = require('./src/controllers/asambleistaController');
 const sesionRoutes = require('./src/controllers/SesionController');
 const votacionRoutes = require('./src/controllers/VotacionController');
@@ -26,6 +27,7 @@ app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
 app.use('/comisiones', comisionRoutes);
 app.use('/certificaciones', certificacionRoutes);
+app.use('/reportes', reporteRoutes);
 app.use('/sesiones', sesionRoutes);
 app.use('/votaciones', votacionRoutes);
 
@@ -82,6 +84,10 @@ app.get('/propuesta-nueva', (req, res) => {
 
 app.get('/preview-certificacion', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
+});
+
+app.get('/vista-reportes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/reportes.view.html'));
 });
 
 app.get('/test-protegido', verificarAutenticacion, (req, res) => {
