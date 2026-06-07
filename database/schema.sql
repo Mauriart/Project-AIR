@@ -926,6 +926,48 @@ CREATE TABLE anulacion_certificacion (
         ON DELETE RESTRICT
 );
 
+--Issue 17 
+
+ALTER TABLE propuesta ADD COLUMN IF NOT EXISTS origen VARCHAR(50) DEFAULT 'otro';
+COMMENT ON COLUMN propuesta.origen IS 'Clasifica la propuesta: consejo_institucional, diez_porciento_asamblea, otro';
+UPDATE propuesta SET origen = 'otro' WHERE origen IS NULL;
+
+-- Vista principal para obtener todos los datos de un asambleísta en una sola consulta
+CREATE OR REPLACE VIEW vista_certificacion AS
+SELECT 
+    a.asambleista_id,
+    a.cedula,
+    a.nombre,
+    a.correo_institucional,
+    n.sector_id,
+    s.nombre AS sector_nombre,
+    n.fecha_inicio AS nombramiento_inicio,
+    n.fecha_fin AS nombramiento_fin,
+    p.id_propuesta,
+    p.titulo,
+    p.codigo_air,
+    p.origen,
+    ses.numero_sesion,
+    ses.fecha AS sesion_fecha,
+    COALESCE((
+        SELECT COUNT(DISTINCT asp.id_asistencia)
+        FROM asistencia_sesion_plenaria asp
+        WHERE asp.id_asambleista = a.asambleista_id
+    ), 0) AS total_asistencias_plenarias
+FROM asambleista a
+LEFT JOIN nombramiento n ON a.asambleista_id = n.asambleista_id
+LEFT JOIN catalogo_sector s ON n.sector_id = s.id_sector
+LEFT JOIN proponente_propuesta pp ON a.asambleista_id = pp.id_asambleista
+LEFT JOIN propuesta p ON pp.id_propuesta = p.id_propuesta
+LEFT JOIN punto_agenda pa ON p.id_propuesta = pa.id_propuesta
+LEFT JOIN sesiones ses ON pa.id_sesion = ses.id_sesion
+WHERE (n.fecha_fin IS NULL OR n.fecha_fin >= CURRENT_DATE)
+ORDER BY a.asambleista_id, ses.fecha DESC;
+
+
+INSERT INTO nombramiento (asambleista_id, sector_id, id_puesto, resolucion_id, fecha_inicio, fecha_fin, id_puesto)
+VALUES (6, 1, 3, 3, '2023-01-01', 2025-01-01 , 1)
+RETURNING asambleista_id;
 -- SPRINT 3: Issue #16 - Reportes administrativos
 -- Vista para contar certificaciones emitidas por mes.
 CREATE OR REPLACE VIEW vw_reporte_certificaciones_mes AS
