@@ -71,6 +71,8 @@ const obtenerDatosCertificacion = async (asambleistaId, fechaInicio = null, fech
     query += ` ORDER BY sesion_fecha DESC`;
     const result = await pool.query(query, params);
     return result.rows;
+};
+
 const generarFolio = async (client) => {
     const anio = new Date().getFullYear();
     let res = await client.query(
