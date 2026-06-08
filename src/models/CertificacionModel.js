@@ -73,43 +73,16 @@ const obtenerDatosCertificacion = async (asambleistaId, fechaInicio = null, fech
     return result.rows;
 };
 
-const generarFolio = async (client) => {
-    const anio = new Date().getFullYear();
-    let res = await client.query(
-        `SELECT ultimo_numero FROM control_folio WHERE anio = $1 FOR UPDATE`,
-        [anio]
-    );
-    let nuevoNumero;
-    if (res.rows.length > 0) {
-        nuevoNumero = res.rows[0].ultimo_numero + 1;
-        await client.query(
-            `UPDATE control_folio SET ultimo_numero = $1 WHERE anio = $2`,
-            [nuevoNumero, anio]
-        );
-    } else {
-        nuevoNumero = 1;
-        await client.query(
-            `INSERT INTO control_folio (anio, ultimo_numero) VALUES ($1, $2)`,
-            [anio, nuevoNumero]
-        );
-    }
-    const folio = `DAIR-${String(nuevoNumero).padStart(3, '0')}-${anio}`;
-    return folio;
-};
-
 const emitirCertificacion = async (id_asambleista, usuario_secretaria, hash) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        // 1 generar folio seguro
-        const folio = await generarFolio(client);
-        // 2 insertar certificación con el folio generado
         const result = await client.query(
             `INSERT INTO certificacion_emitida 
-             (id_asambleista, folio_unico, hash_seguridad, usuario_secretaria, fecha_emision)
-             VALUES ($1, $2, $3, $4, NOW())
+             (id_asambleista, hash_seguridad, usuario_secretaria, fecha_emision)
+             VALUES ($1, $2, $3, NOW())
              RETURNING *`,
-            [id_asambleista, folio, hash, usuario_secretaria]
+            [id_asambleista, hash, usuario_secretaria]
         );
         await client.query('COMMIT');
         return result.rows[0];

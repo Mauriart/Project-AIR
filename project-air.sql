@@ -502,11 +502,19 @@ ON nombramiento(estado);
 CREATE OR REPLACE FUNCTION fn_preview_siguiente_folio()
 RETURNS VARCHAR AS $$
 DECLARE
-    ultimo_id INT;
-    anio INT := EXTRACT(YEAR FROM CURRENT_DATE);
+    v_anio      INT := EXTRACT(YEAR FROM CURRENT_DATE);
+    v_prefijo   VARCHAR(10) := 'DAIR';
+    v_numero    INT := 0;
 BEGIN
-    SELECT COUNT(*) INTO ultimo_id FROM sys_log_auditoria WHERE accion = 'CERTIFICACION';
-    RETURN 'CERT-' || anio || '-' || LPAD((ultimo_id + 1)::TEXT, 3, '0');
+    SELECT ultimo_numero INTO v_numero
+    FROM control_folio
+    WHERE anio = v_anio AND prefijo = v_prefijo;
+
+    IF NOT FOUND THEN
+        v_numero := 0;
+    END IF;
+
+    RETURN v_prefijo || '-' || LPAD((v_numero + 1)::TEXT, 3, '0') || '-' || v_anio;
 END;
 $$ LANGUAGE plpgsql;
 -- *****************
