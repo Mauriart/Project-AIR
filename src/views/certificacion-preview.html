@@ -23,6 +23,7 @@
         button.primary:hover { background-color:#1f5e7a; }
         .btn-peligro { background-color:#a11d33; color:white; border:none; padding:0.45rem 0.6rem; border-radius:4px; cursor:pointer; }
         .btn-secundario { background-color:#6c757d; color:white; border:none; padding:0.45rem 0.6rem; border-radius:4px; cursor:pointer; }
+        .btn-exito { background-color:#28a745; color:white; border:none; padding:0.7rem 1rem; border-radius:4px; cursor:pointer; font-size:1rem; }
 
         /* Sections and badges (copied) */
         .seccion { background-color:white; padding:1rem; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:1.25rem; }
@@ -132,6 +133,23 @@
             <div class="hash-display" id="confirmHash"></div>
         </div>
     </section>
+
+    <!-- ======== SECCIÓN GENERAR CERTIFICADO - VISIBLE ======== -->
+    <section id="seccionGenerar" class="seccion">
+        <h3> Generar certificado (PDF)</h3>
+        <div class="form-group">
+            <label>ID del asambleísta:</label>
+            <input type="number" id="idAsambleistaGenerar" value="1" style="width:100px;">
+        </div>
+        <div class="form-group">
+            <label>Desde:</label>
+            <input type="date" id="fechaDesdeGenerar" value="2000-01-01">
+            <label>Hasta:</label>
+            <input type="date" id="fechaHastaGenerar" value="2099-12-31">
+        </div>
+        <button id="btnGenerarCertificado" class="btn-exito"> Generar y descargar PDF</button>
+        <div id="resultadoGeneracion" style="margin-top:10px;padding:10px;border:1px solid #ccc;border-radius:4px;display:none;"></div>
+    </section>
 </main>
 
 <!-- Modal de anulación -->
@@ -183,10 +201,8 @@
     // Mostrar sugerencias mientras se escribe en el campo de folio
     folioInput.addEventListener('input', async function() {
         const term = this.value.trim().toLowerCase();
-        // Asegurar que tenemos una cache de certificaciones (intentar cargar si está vacía)
         if (certificacionesCache.length === 0) {
             try {
-                // Intentar obtener folios públicamente (fallback a authFetch si no funciona)
                 let res = await fetch('/api/certificaciones');
                 if (!res.ok && TOKEN) res = await authFetch('/api/certificaciones');
                 if (res.ok) {
@@ -197,8 +213,7 @@
                 console.error('No se pudieron cargar folios para sugerencias', e);
             }
         }
-
-        const folios = certificacionesCache.map(c => (c.folio || c.folio_unico || c.folio_unico || '').toString()).filter(Boolean);
+        const folios = certificacionesCache.map(c => (c.folio || c.folio_unico || '').toString()).filter(Boolean);
         const únicos = [...new Set(folios)];
         const filtrados = únicos.filter(f => f.toLowerCase().includes(term));
         if (filtrados.length === 0) {
@@ -215,7 +230,6 @@
         }));
     });
 
-    // Cerrar sugerencias al perder foco (con pequeño delay para permitir click)
     folioInput.addEventListener('blur', () => setTimeout(() => { folioSugerencias.style.display = 'none'; }, 150));
     folioInput.addEventListener('focus', async () => { if (folioInput.value.trim() === '') folioInput.dispatchEvent(new Event('input')); });
 
@@ -418,16 +432,59 @@
         }
     }
 
-    // 8. Manejo de errores ya cubierto con mostrarMensaje
+    // 8. GENERAR CERTIFICADO - sección independiente
+    const btnGenerar = document.getElementById('btnGenerarCertificado');
+    const resultadoGeneracion = document.getElementById('resultadoGeneracion');
 
-    // 9. CSS ya agregado
+    if (btnGenerar) {
+        btnGenerar.addEventListener('click', async function() {
+            const idAsambleista = document.getElementById('idAsambleistaGenerar').value;
+            const fechaDesde = document.getElementById('fechaDesdeGenerar').value;
+            const fechaHasta = document.getElementById('fechaHastaGenerar').value;
 
-    // 10. Logout
+            resultadoGeneracion.style.display = 'block';
+            resultadoGeneracion.innerHTML = ' Generando certificado...';
+            resultadoGeneracion.style.color = '#333';
+
+            try {
+                const token = sessionStorage.getItem('airToken');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const response = await fetch('/certificaciones/generar-pdf', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ 
+                        idAsambleista: parseInt(idAsambleista) 
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `certificado_${idAsambleista}_${new Date().toISOString().slice(0,10)}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    resultadoGeneracion.innerHTML = ' Certificado generado y descargado correctamente.';
+                    resultadoGeneracion.style.color = 'green';
+                } else {
+                    const error = await response.json();
+                    resultadoGeneracion.innerHTML = ` Error: ${error.error || error.mensaje || 'desconocido'}`;
+                    resultadoGeneracion.style.color = 'red';
+                }
+            } catch (error) {
+                resultadoGeneracion.innerHTML = ` Error de red: ${error.message}`;
+                resultadoGeneracion.style.color = 'red';
+            }
+        });
+    }
+
     document.getElementById('logoutBtn').addEventListener('click', () => {
         sessionStorage.removeItem('airToken'); sessionStorage.removeItem('airRoles'); sessionStorage.removeItem('airPermisos'); window.location.href = '/login';
     });
 
-    // Llamada inicial
     cargarTabla();
 </script>
 </body>

@@ -7,6 +7,7 @@ const config = {
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
+  options: '-c search_path=projectair,public',
 };
 
 if (process.env.DB_SSL === 'true') {

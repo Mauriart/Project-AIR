@@ -3,6 +3,10 @@ const router = express.Router();
 
 
 const CertificacionModel = require('../models/CertificacionModel');
+const TemplateService = require('../services/TemplateService');
+const PDFService = require('../services/PDFService');
+const CryptoService = require('../services/CryptoService');
+
 const { generarHash } = require('../services/CryptoService');
 
 const pool = require('../config/db');
@@ -93,33 +97,35 @@ router.post('/:id/anular', verificarAutenticacion, requierePermiso('EMITIR_CERTI
 
 
 // Endpoint para generar y descargar el certificado en PDF
-router.post('/generar-pdf', verificarAutenticacion, requiereRol('Administrador', 'Secretaría'), async (req, res) => {
-    const { id_asambleista, fecha_inicio, fecha_fin } = req.body;
-    if (!id_asambleista) {
+router.post('/generar-pdf', async (req, res) => {
+    const { idAsambleista } = req.body;
+
+    if (!idAsambleista) {
         return res.status(400).json({ ok: false, mensaje: 'Se requiere id_asambleista' });
     }
+
     try {
-        // 1. Obtener datos consolidados del asambleísta
-        const datos = await CertificacionModel.obtenerDatosCertificacion(id_asambleista, fecha_inicio, fecha_fin);
+        // 1. Obtener datos del asambleísta (con rango de fechas opcional)
+        const datos = await CertificacionModel.obtenerDatosCertificacion(idAsambleista);
         if (!datos || datos.length === 0) {
             return res.status(404).json({ ok: false, mensaje: 'No se encontraron datos para el asambleísta' });
         }
 
-        // 2. Generar HTML temporal para calcular el hash (sin folio aún)
-        let htmlTemp = renderizarCertificado(datos, '{{FOLIO}}', '{{HASH}}');
-        const hash = generarHash(htmlTemp);
+        // 2. Generar HTML temporal para calcular hash (sin folio aún)
+        let htmlTemp = TemplateService.renderizarCertificado(datos, '{{FOLIO}}', '{{HASH}}');
+        const hash = CryptoService.generarHash(htmlTemp);
 
-        // 3. Emitir certificación (esto guarda en BD y genera folio único)
-        const certificado = await CertificacionModel.emitirCertificacion(id_asambleista, req.usuario.username, hash);
+        // 3. Emitir certificación (guarda en BD y genera folio)
+        const certificado = await CertificacionModel.emitirCertificacion(idAsambleista, req.usuario?.username || 'sistema', hash);
         const folio = certificado.folio_unico;
 
-        // 4. Generar HTML final con el folio real y el hash
-        const htmlFinal = renderizarCertificado(datos, folio, hash);
+        // 4. Generar HTML final con folio y hash reales
+        const htmlFinal = TemplateService.renderizarCertificado(datos, folio, hash);
 
         // 5. Generar PDF
-        const pdfBuffer = await generarPDF(htmlFinal);
+        const pdfBuffer = await PDFService.generarPDF(htmlFinal);
 
-        // 6. Enviar el PDF como descarga
+        // 6. Enviar respuesta
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="certificado_${folio}.pdf"`);
         res.send(pdfBuffer);
