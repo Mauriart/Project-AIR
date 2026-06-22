@@ -971,3 +971,66 @@ SELECT
     COUNT(folio_unico)::INT AS total_folios
 FROM certificacion_emitida
 GROUP BY EXTRACT(YEAR FROM fecha_emision);
+
+-- Tabla que relaciona asambleístas con propuestas (relación N:M)
+CREATE TABLE proponente_propuesta (
+    id_proponente_propuesta SERIAL PRIMARY KEY,
+    id_propuesta            INTEGER NOT NULL,
+    id_asambleista          INTEGER NOT NULL,
+    fecha_registro          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_pp_propuesta
+        FOREIGN KEY (id_propuesta)
+        REFERENCES propuesta(id_propuesta)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_pp_asambleista
+        FOREIGN KEY (id_asambleista)
+        REFERENCES asambleista(asambleista_id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT uq_pp_unique
+        UNIQUE (id_propuesta, id_asambleista)
+);
+
+
+ALTER TABLE propuesta ADD COLUMN IF NOT EXISTS origen VARCHAR(50) DEFAULT 'otro';
+
+CREATE OR REPLACE VIEW vista_certificacion AS
+SELECT 
+    a.asambleista_id,
+    a.cedula,
+    a.nombre,
+    a.correo_institucional,
+    n.sector_id,
+    cs.nombre AS sector_nombre,
+    n.fecha_inicio AS nombramiento_inicio,
+    n.fecha_fin AS nombramiento_fin,
+    p.id_propuesta,
+    p.titulo,
+    p.codigo_air,
+    p.origen,
+    ses.numero_sesion,
+    ses.fecha AS sesion_fecha,
+    COALESCE((
+        SELECT COUNT(DISTINCT asp.id_asistencia)
+        FROM asistencia_sesion_plenaria asp
+        WHERE asp.id_asambleista = a.asambleista_id
+    ), 0) AS total_asistencias_plenarias
+FROM asambleista a
+LEFT JOIN nombramiento n 
+    ON a.asambleista_id = n.asambleista_id
+    AND (n.fecha_fin IS NULL OR n.fecha_fin >= CURRENT_DATE)
+LEFT JOIN catalogo_sector cs 
+    ON n.sector_id = cs.id_sector
+LEFT JOIN proponente_propuesta pp 
+    ON a.asambleista_id = pp.id_asambleista
+LEFT JOIN propuesta p 
+    ON pp.id_propuesta = p.id_propuesta
+LEFT JOIN punto_agenda pa 
+    ON p.id_propuesta = pa.id_propuesta
+LEFT JOIN sesiones ses 
+    ON pa.id_sesion = ses.id_sesion
+GROUP BY a.asambleista_id, n.sector_id, cs.nombre, n.fecha_inicio, n.fecha_fin,
+         p.id_propuesta, p.titulo, p.codigo_air, p.origen, ses.numero_sesion, ses.fecha
+ORDER BY a.asambleista_id, ses.fecha DESC;
