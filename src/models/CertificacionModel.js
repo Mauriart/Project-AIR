@@ -59,18 +59,62 @@ const obtenerPorFolio = async (folio) => {
 };
 
 const obtenerDatosCertificacion = async (asambleistaId, fechaInicio = null, fechaFin = null) => {
-    let query = `
+    // 1. Siempre obtener datos básicos del asambleísta
+    const queryAsambleista = `
+        SELECT 
+            a.asambleista_id,
+            a.nombre,
+            a.cedula,
+            a.correo_institucional,
+            cs.nombre AS sector_nombre,
+            n.fecha_inicio AS nombramiento_inicio,
+            n.fecha_fin AS nombramiento_fin
+        FROM asambleista a
+        LEFT JOIN nombramiento n ON a.asambleista_id = n.asambleista_id AND n.estado = 'ACTIVO'
+        LEFT JOIN catalogo_sector cs ON n.sector_id = cs.id_sector
+        WHERE a.asambleista_id = $1
+    `;
+    const resultAsambleista = await pool.query(queryAsambleista, [asambleistaId]);
+    if (resultAsambleista.rows.length === 0) {
+        return []; // asambleísta no existe
+    }
+    const asambleista = resultAsambleista.rows[0];
+
+    // 2. Obtener datos de la vista (con filtro de fechas, si existe)
+    let queryVista = `
         SELECT * FROM vista_certificacion 
         WHERE asambleista_id = $1
     `;
     const params = [asambleistaId];
     if (fechaInicio && fechaFin) {
-        query += ` AND sesion_fecha BETWEEN $2 AND $3`;
+        queryVista += ` AND sesion_fecha BETWEEN $2 AND $3`;
         params.push(fechaInicio, fechaFin);
     }
-    query += ` ORDER BY sesion_fecha DESC`;
-    const result = await pool.query(query, params);
-    return result.rows;
+    queryVista += ` ORDER BY sesion_fecha DESC`;
+    const resultVista = await pool.query(queryVista, params);
+
+    // 3. Si la vista devuelve datos, usar esos; si no, crear una fila base con los datos del asambleísta
+    if (resultVista.rows.length > 0) {
+        return resultVista.rows;
+    } else {
+        // Crear una fila con los datos del asambleísta y campos NULL para propuestas
+        return [{
+            asambleista_id: asambleista.asambleista_id,
+            nombre: asambleista.nombre,
+            cedula: asambleista.cedula,
+            correo_institucional: asambleista.correo_institucional,
+            sector_nombre: asambleista.sector_nombre || 'Sin sector',
+            nombramiento_inicio: asambleista.nombramiento_inicio,
+            nombramiento_fin: asambleista.nombramiento_fin,
+            id_propuesta: null,
+            titulo: null,
+            codigo_air: null,
+            origen: null,
+            numero_sesion: null,
+            sesion_fecha: null,
+            total_asistencias_plenarias: 0   // o lo que corresponda
+        }];
+    }
 };
 
 const emitirCertificacion = async (id_asambleista, usuario_secretaria, hash) => {
