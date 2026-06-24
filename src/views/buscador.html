@@ -612,7 +612,7 @@
         if (!datosConsulta) return alert('Primero realice una consulta.');
         try {
             // Llamada al endpoint de previsualización (HTML)
-            const res = await authFetch('/api/certificaciones/previsualizar', {
+            const res = await authFetch('/certificaciones/previsualizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -647,7 +647,7 @@
     document.getElementById('btnDescargarDesdeModal').addEventListener('click', async () => {
         if (!datosConsulta) return alert('No hay datos para generar el PDF.');
         try {
-            const res = await authFetch('/api/certificaciones/generar-pdf', {
+            const res = await authFetch('/certificaciones/generar-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -678,7 +678,7 @@
     document.getElementById('btnDescargarPDF').addEventListener('click', async () => {
         if (!datosConsulta) return alert('Primero realice una consulta.');
         try {
-            const res = await authFetch('/api/certificaciones/generar-pdf', {
+            const res = await authFetch('/certificaciones/generar-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

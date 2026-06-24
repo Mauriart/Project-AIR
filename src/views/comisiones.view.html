@@ -387,6 +387,13 @@
 <div id="sugerenciasAsambleistas" style="border: 1px solid #ccd5df; max-height: 150px; overflow-y: auto; display: none; background: white; border-radius: 6px; margin-top: -0.5rem; margin-bottom: 0.75rem;"></div>
 
 <div class="form-group">
+    <label>Asambleístas disponibles (multiselección):</label>
+    <select id="asambleistasSelect" multiple size="5" style="width: 100%; min-width: 200px;">
+        <!-- Opciones cargadas dinámicamente -->
+    </select>
+</div>
+
+<div class="form-group">
     <label>Rol para todos:</label>
     <select id="rolMasivo">
         <option value="Miembro">Miembro</option>
@@ -418,6 +425,10 @@
     </select>
 </div>
 
+<div class="form-group">
+    <label>Fecha inicio:</label>
+    <input type="date" id="fechaInicio">
+</div>
 
 <button id="btnAgregarIntegrante">
     Agregar integrante
