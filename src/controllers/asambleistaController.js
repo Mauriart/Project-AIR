@@ -103,7 +103,7 @@ async function listarNombramientos(req, res) {
     const asambleistaId = parseInt(req.params.id);
     try {
         const query = `
-            SELECT n.*, cs.nombre as sector, cp.nombre as puesto, r.numero_resolucion
+            SELECT n.*, cs.nombre as sector, cp.nombre_puesto as puesto, r.numero_resolucion
             FROM nombramiento n
             LEFT JOIN catalogo_sector cs ON n.sector_id = cs.id_sector
             LEFT JOIN catalogo_puestos cp ON n.id_puesto = cp.id_puesto

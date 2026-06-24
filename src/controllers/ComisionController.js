@@ -390,6 +390,36 @@ router.post('/sesiones/:id/asistencia', requiereGestionComisiones, async (req, r
     }
 });
 
+router.post('/:id/integrantes-masivo', requiereGestionComisiones, async (req, res) => {
+    const { id } = req.params;
+    const { integrantes } = req.body; // [{ asambleista_id, rol, fecha_inicio, fecha_fin? }]
+
+    if (!integrantes || !Array.isArray(integrantes) || integrantes.length === 0) {
+        return res.status(400).json({ ok: false, mensaje: 'Debe enviar un array de integrantes' });
+    }
+
+    try {
+        const resultados = [];
+        for (const item of integrantes) {
+            if (!item.asambleista_id || !item.rol || !item.fecha_inicio) {
+                return res.status(400).json({ ok: false, mensaje: 'Faltan datos en uno de los integrantes' });
+            }
+            const integrante = await ComisionModel.agregarIntegrante(
+                id,
+                item.asambleista_id,
+                item.rol,
+                item.fecha_inicio,
+                item.fecha_fin || null
+            );
+            resultados.push(integrante);
+        }
+        return res.status(201).json({ ok: true, integrantes: resultados });
+    } catch (error) {
+        console.error('Error en carga masiva:', error);
+        return res.status(500).json({ ok: false, mensaje: 'Error al agregar integrantes' });
+    }
+});
+
 router.get('/sesiones/:id/asistencia', async (req, res) => {
 
     try {

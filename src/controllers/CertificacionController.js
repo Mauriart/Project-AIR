@@ -52,23 +52,90 @@ router.get('/siguiente-folio', verificarAutenticacion, async (req, res) => {
 });
 
 router.get('/', verificarAutenticacion, async (req, res) => {
-  try {
-    const certs = await CertificacionModel.obtenerCertificaciones(req.query);
-    return res.status(200).json({ ok: true, data: certs });
-  } catch (error) {
-    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
-  }
+    try {
+        const query = `
+            SELECT 
+                c.id_certificacion,
+                c.folio_unico,
+                c.fecha_emision,
+                c.usuario_secretaria,
+                a.nombre AS asambleista_nombre,
+                a.cedula,
+                an.id_anulacion IS NOT NULL AS anulada,
+                an.motivo AS motivo_anulacion
+            FROM certificacion_emitida c
+            LEFT JOIN asambleista a ON c.id_asambleista = a.asambleista_id
+            LEFT JOIN anulacion_certificacion an ON c.id_certificacion = an.id_certificacion
+            ORDER BY c.fecha_emision DESC
+        `;
+        const { rows } = await pool.query(query);
+        res.json(rows);  // ← Devuelve el array directamente
+    } catch (error) {
+        console.error('Error en GET /certificaciones:', error);
+        res.status(500).json([]);
+    }
 });
 
 router.get('/verificar/:folio', async (req, res) => {
-  try {
-    const cert = await CertificacionModel.obtenerPorFolio(req.params.folio);
-    if (!cert) return res.status(404).json({ ok: false, valida: false, mensaje: 'Folio no encontrado' });
-    if (cert.anulada) return res.status(200).json({ ok: true, valida: false, mensaje: 'Certificación anulada', motivo: cert.motivo_anulacion });
-    return res.status(200).json({ ok: true, valida: true, mensaje: 'Certificación válida', data: { folio: cert.folio_unico, asambleista: cert.asambleista, cedula: cert.cedula, fecha: cert.fecha_emision } });
-  } catch (error) {
-    return res.status(500).json({ ok: false, mensaje: 'Error interno' });
-  }
+    try {
+        const folio = req.params.folio;
+        // Consulta principal con JOIN a asambleista y LEFT JOIN a anulacion
+        const query = `
+            SELECT 
+                c.folio_unico,
+                c.fecha_emision,
+                c.usuario_secretaria,
+                a.nombre AS asambleista_nombre,
+                a.cedula AS asambleista_cedula,
+                an.id_anulacion IS NOT NULL AS anulada,
+                an.motivo AS motivo_anulacion
+            FROM certificacion_emitida c
+            LEFT JOIN asambleista a ON c.id_asambleista = a.asambleista_id
+            LEFT JOIN anulacion_certificacion an ON c.id_certificacion = an.id_certificacion
+            WHERE c.folio_unico = $1
+        `;
+        const result = await pool.query(query, [folio]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ 
+                ok: false, 
+                valida: false, 
+                mensaje: 'Folio no encontrado' 
+            });
+        }
+        
+        const cert = result.rows[0];
+        
+        // Si está anulada (existe registro en anulacion_certificacion)
+        if (cert.anulada) {
+            return res.status(200).json({
+                ok: true,
+                valida: false,
+                anulada: true,
+                mensaje: 'Certificación anulada',
+                motivo: cert.motivo_anulacion || 'No especificado',
+                folio: cert.folio_unico
+            });
+        }
+        
+        // Certificación válida
+        return res.status(200).json({
+            ok: true,
+            valida: true,
+            mensaje: 'Certificación válida',
+            folio: cert.folio_unico,
+            asambleistaNombre: cert.asambleista_nombre || 'No disponible',
+            asambleistaCedula: cert.asambleista_cedula || 'No disponible',
+            fechaEmision: cert.fecha_emision ? new Date(cert.fecha_emision).toLocaleDateString() : 'No disponible',
+            emitidaPor: cert.usuario_secretaria || 'No disponible'
+        });
+    } catch (error) {
+        console.error('Error en verificar:', error);
+        return res.status(500).json({ 
+            ok: false, 
+            mensaje: 'Error interno al verificar folio' 
+        });
+    }
 });
 
 router.post('/', verificarAutenticacion, requiereRol('Administrador', 'Secretaría'), async (req, res) => {
@@ -95,35 +162,83 @@ router.post('/:id/anular', verificarAutenticacion, requierePermiso('EMITIR_CERTI
   }
 });
 
-
-// Endpoint para generar y descargar el certificado en PDF
-router.post('/generar-pdf', async (req, res) => {
-    const { idAsambleista } = req.body;
-
+// ========== PREVISUALIZACIÓN DEL CERTIFICADO ==========
+router.post('/previsualizar', async (req, res) => {
+    const { idAsambleista, fechaDesde, fechaHasta } = req.body;
     if (!idAsambleista) {
         return res.status(400).json({ ok: false, mensaje: 'Se requiere id_asambleista' });
     }
-
     try {
-        // 1. Obtener datos del asambleísta (con rango de fechas opcional)
-        const datos = await CertificacionModel.obtenerDatosCertificacion(idAsambleista);
+        // Obtener datos del asambleísta 
+        const datos = await CertificacionModel.obtenerDatosCertificacion(idAsambleista, fechaDesde, fechaHasta);
         if (!datos || datos.length === 0) {
             return res.status(404).json({ ok: false, mensaje: 'No se encontraron datos para el asambleísta' });
         }
 
-        // 2. Generar HTML temporal para calcular hash (sin folio aún)
-        let htmlTemp = TemplateService.renderizarCertificado(datos, '{{FOLIO}}', '{{HASH}}');
-        const hash = CryptoService.generarHash(htmlTemp);
+        // Generar HTML sin guardar (folio y hash ficticios para previsualización)
+        const html = TemplateService.renderizarCertificado(datos, 'PREVIEW', 'hash_preview');
 
-        // 3. Emitir certificación (guarda en BD y genera folio)
+        // Enviar HTML directamente (para mostrarlo en el modal)
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+    } catch (error) {
+        console.error('Error en /previsualizar:', error);
+        res.status(500).json({ ok: false, mensaje: error.message || 'Error al generar previsualización' });
+    }
+});
+
+// Endpoint para generar y descargar el certificado en PDF
+router.post('/generar-pdf', async (req, res) => {
+    const { idAsambleista, fechaDesde, fechaHasta } = req.body;
+    if (!idAsambleista) {
+        return res.status(400).json({ ok: false, mensaje: 'Se requiere id_asambleista' });
+    }
+    try {
+        // 1. Obtener datos del asambleísta
+        const datos = await CertificacionModel.obtenerDatosCertificacion(idAsambleista, fechaDesde, fechaHasta);
+        if (!datos || datos.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: 'No se encontraron datos para el asambleísta' });
+        }
+
+        // 2. Estructurar datos para PDFKit
+        const asambleista = datos[0];
+        // Agrupar propuestas (evitar duplicados)
+        const propuestasMap = {};
+        datos.forEach(row => {
+            if (row.id_propuesta && !propuestasMap[row.id_propuesta]) {
+                propuestasMap[row.id_propuesta] = {
+                    titulo: row.titulo,
+                    codigo_air: row.codigo_air,
+                    sesion_fecha: row.sesion_fecha,
+                    nota_legal: row.nota_legal
+                };
+            }
+        });
+        const propuestas = Object.values(propuestasMap);
+
+        const contenido = {
+            asambleista: {
+                nombre: asambleista.nombre,
+                cedula: asambleista.cedula,
+                sector_nombre: asambleista.sector_nombre,
+                nombramiento_inicio: asambleista.nombramiento_inicio,
+                nombramiento_fin: asambleista.nombramiento_fin,
+                total_asistencias_plenarias: asambleista.total_asistencias_plenarias || 0,
+                hash: null // se llenará después
+            },
+            propuestas: propuestas
+        };
+
+        // 3. Generar hash del contenido
+        const hash = CryptoService.generarHash(JSON.stringify(contenido));
+        contenido.asambleista.hash = hash;
+
+        // 4. Emitir certificación (guardar en BD y generar folio)
         const certificado = await CertificacionModel.emitirCertificacion(idAsambleista, req.usuario?.username || 'sistema', hash);
         const folio = certificado.folio_unico;
 
-        // 4. Generar HTML final con folio y hash reales
-        const htmlFinal = TemplateService.renderizarCertificado(datos, folio, hash);
-
-        // 5. Generar PDF
-        const pdfBuffer = await PDFService.generarPDF(htmlFinal);
+        // 5. Generar PDF con pdfkit
+        const pdfBuffer = await PDFService.generarPDF(contenido, folio);
 
         // 6. Enviar respuesta
         res.setHeader('Content-Type', 'application/pdf');

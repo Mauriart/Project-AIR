@@ -9,50 +9,108 @@
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; color:#1a3e60; min-height:100vh; }
 
-        /* Navbar (copiado de buscador.html) */
-        .app-navbar { position: sticky; top:0; z-index:900; display:flex; align-items:center; justify-content:space-between; gap:1rem; background:#12344d; color:white; padding:0.75rem 1rem; box-shadow:0 2px 10px rgba(0,0,0,0.12); }
-        .app-navbar .brand { font-weight:bold; }
-        .app-navbar .links { display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; }
-        .app-navbar a, .app-navbar button { color:white; text-decoration:none; background:transparent; border:1px solid rgba(255,255,255,0.3); border-radius:4px; padding:0.45rem 0.7rem; font-size:0.9rem; cursor:pointer; }
-        .app-navbar a:hover, .app-navbar button:hover, .app-navbar a.activo { background:#2c7da0; }
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #12344d;
+            color: white;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+        .app-navbar .brand { font-weight: bold; }
+        .app-navbar .links { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+        .app-navbar a, .app-navbar button {
+            color: white;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .app-navbar a:hover, .app-navbar button:hover, .app-navbar a.activo { background: #2c7da0; }
 
         main { width: min(100% - 2rem, 980px); margin: 2rem auto; padding: 1rem; }
-        h1 { margin-top:0; font-size:1.5rem; color:#1a3e60; }
+        h1 { margin-top: 0; font-size: 1.5rem; color: #1a3e60; }
 
-        button.primary { background-color:#2c7da0; color:white; border:none; padding:0.7rem 1rem; border-radius:4px; cursor:pointer; font-size:1rem; }
-        button.primary:hover { background-color:#1f5e7a; }
-        .btn-peligro { background-color:#a11d33; color:white; border:none; padding:0.45rem 0.6rem; border-radius:4px; cursor:pointer; }
-        .btn-secundario { background-color:#6c757d; color:white; border:none; padding:0.45rem 0.6rem; border-radius:4px; cursor:pointer; }
-        .btn-exito { background-color:#28a745; color:white; border:none; padding:0.7rem 1rem; border-radius:4px; cursor:pointer; font-size:1rem; }
+        button.primary {
+            background-color: #2c7da0;
+            color: white;
+            border: none;
+            padding: 0.7rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button.primary:hover { background-color: #1f5e7a; }
+        .btn-peligro { background-color: #a11d33; color: white; border: none; padding: 0.45rem 0.6rem; border-radius: 4px; cursor: pointer; }
+        .btn-secundario { background-color: #6c757d; color: white; border: none; padding: 0.45rem 0.6rem; border-radius: 4px; cursor: pointer; }
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+        .badge.vigente { background: #4CAF50; color: white; }
+        .badge.inactivo { background: #f44336; color: white; }
+        .oculto { display: none; }
 
-        /* Sections and badges (copied) */
-        .seccion { background-color:white; padding:1rem; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:1.25rem; }
-        .form-group { margin-bottom:0.75rem; }
-        .badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.8rem; }
-        .badge.vigente { background:#4CAF50; color:white; }
-        .badge.inactivo { background:#f44336; color:white; }
-        .oculto { display:none; }
+        .seccion {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.25rem;
+        }
+        .form-group { margin-bottom: 0.75rem; }
+        label { font-weight: bold; display: inline-block; width: 80px; }
+        input { padding: 0.4rem; width: 250px; }
 
         /* Modal */
-        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; }
-        .modal { background:white; max-width:480px; width:90%; border-radius:8px; padding:1rem; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.abierto { display: flex; }
+        .modal {
+            background: white;
+            max-width: 480px;
+            width: 90%;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .modal textarea { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
 
-        /* Hash display and messages */
-        .hash-display { font-family:monospace; font-size:0.8rem; word-break:break-all; background:#f4f4f4; padding:0.5rem; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .mensaje-flotante { position:fixed; top:20px; right:20px; background:#28a745; color:white; padding:0.8rem; border-radius:5px; z-index:1100; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
-        .error-flotante { background:#dc3545; }
+        table.cert-table { width: 100%; border-collapse: collapse; }
+        table.cert-table th, table.cert-table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        table.cert-table th { background: #e9ecef; }
+        .acciones-col { width: 140px; }
+        .folio-col { width: 120px; }
+        .nombre-col { width: 200px; }
 
-        /* Table */
-        table.cert-table { width:100%; border-collapse:collapse; table-layout:fixed; }
-        table.cert-table th, table.cert-table td { border:1px solid #ddd; padding:0.5rem; text-align:left; }
-        table.cert-table th { background:#e9ecef; }
-        .acciones-col { width:140px; }
-        .folio-col { width:120px; }
-        .nombre-col { width:240px; }
-        .cedula-col { width:120px; }
-        .fecha-col { width:160px; }
-
-        @media (max-width:700px) { .app-navbar { align-items:flex-start; flex-direction:column; } .app-navbar .links { justify-content:flex-start; } }
+        .mensaje-flotante {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 5px;
+            z-index: 1100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .error-flotante { background: #dc3545; }
     </style>
 </head>
 <body>
@@ -74,24 +132,24 @@
 <main>
     <h1>Gestión de Certificaciones</h1>
 
-    <!-- Sección A: Verificar certificación (pública) -->
+    <!-- Verificador de folio -->
     <section id="seccionVerificador" class="seccion">
         <h2>Verificador de folio</h2>
-        <div class="form-group" style="position:relative;">
+        <div class="form-group">
             <label for="folioInput">Folio:</label>
             <input type="text" id="folioInput" autocomplete="off" placeholder="Ingrese folio a verificar">
             <button id="verificarBtn" class="primary">Verificar</button>
-            <div id="folioSugerencias" style="position:absolute; left:0; right:0; background:white; border:1px solid #ccc; max-height:160px; overflow:auto; display:none; z-index:1050;"></div>
+            <div id="folioSugerencias" style="border:1px solid #ccc; max-height:150px; overflow-y:auto; display:none; margin-top:0.25rem;"></div>
         </div>
-        <div id="verificadorResultado" aria-live="polite"></div>
+        <div id="verificadorResultado"></div>
     </section>
 
-    <!-- Sección B: Listado de certificaciones (autenticado) -->
+    <!-- Listado de certificaciones -->
     <section id="seccionListado" class="seccion">
         <h2>Listado de certificaciones</h2>
-        <div style="margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center;">
-            <input type="text" id="filtroCerts" placeholder="Filtrar por nombre o cédula..." style="flex:1;" autocomplete="off">
-            <div id="tablaLoading" style="display:none; min-width:120px; text-align:right;">Cargando...</div>
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem;">
+            <input type="text" id="filtroCerts" placeholder="Filtrar por nombre o cédula..." style="flex:1;">
+            <span id="tablaLoading" style="display:none;">Cargando...</span>
         </div>
         <div id="tablaEmpty" class="oculto">No hay certificaciones registradas</div>
         <table id="tablaCertificaciones" class="cert-table oculto">
@@ -99,8 +157,8 @@
                 <tr>
                     <th class="folio-col">Folio</th>
                     <th class="nombre-col">Asambleísta</th>
-                    <th class="cedula-col">Cédula</th>
-                    <th class="fecha-col">Fecha emisión</th>
+                    <th>Cédula</th>
+                    <th>Fecha emisión</th>
                     <th>Emitida por</th>
                     <th>Estado</th>
                     <th class="acciones-col">Acciones</th>
@@ -109,57 +167,16 @@
             <tbody id="tablaBody"></tbody>
         </table>
     </section>
-
-    <!-- Sección C: Emitir certificación (solo con permiso) -->
-    <section id="seccionEmitir" class="seccion oculto">
-        <h2>Emitir certificación</h2>
-        <div class="form-group">
-            <label>Asambleísta:</label>
-            <input type="text" id="emitAsambleistaInput" placeholder="Buscar asambleísta..." autocomplete="off">
-            <div id="emitSugerencias" style="border:1px solid #ccc; max-height:150px; overflow-y:auto; display:none;"></div>
-            <input type="hidden" id="emitAsambleistaId">
-        </div>
-        <div class="form-group">
-            <label>Contenido:</label>
-            <textarea id="emitContenido" rows="6" style="width:100%;"></textarea>
-        </div>
-        <div class="form-group">Preview folio: <span id="previewFolio">-</span></div>
-        <div class="form-group">
-            <button id="emitirBtn" class="primary">Emitir certificación</button>
-        </div>
-        <div id="emitConfirmacion" style="display:none; margin-top:1rem;">
-            <h3>Certificación emitida</h3>
-            <p>Folio: <strong id="confirmFolio"></strong></p>
-            <div class="hash-display" id="confirmHash"></div>
-        </div>
-    </section>
-
-    <!-- ======== SECCIÓN GENERAR CERTIFICADO - VISIBLE ======== -->
-    <section id="seccionGenerar" class="seccion">
-        <h3> Generar certificado (PDF)</h3>
-        <div class="form-group">
-            <label>ID del asambleísta:</label>
-            <input type="number" id="idAsambleistaGenerar" value="1" style="width:100px;">
-        </div>
-        <div class="form-group">
-            <label>Desde:</label>
-            <input type="date" id="fechaDesdeGenerar" value="2000-01-01">
-            <label>Hasta:</label>
-            <input type="date" id="fechaHastaGenerar" value="2099-12-31">
-        </div>
-        <button id="btnGenerarCertificado" class="btn-exito"> Generar y descargar PDF</button>
-        <div id="resultadoGeneracion" style="margin-top:10px;padding:10px;border:1px solid #ccc;border-radius:4px;display:none;"></div>
-    </section>
 </main>
 
 <!-- Modal de anulación -->
-<div id="modalOverlay" class="oculto" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" id="modalAnular">
+<div id="modalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
         <h3 id="modalTitulo">Anular certificación</h3>
         <div>
-            <textarea id="motivoAnulacion" rows="4" style="width:100%;" minlength="10" placeholder="Motivo de anulación (mínimo 10 caracteres)"></textarea>
+            <textarea id="motivoAnulacion" rows="4" placeholder="Motivo de anulación (mínimo 10 caracteres)"></textarea>
         </div>
-        <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:flex-end;">
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.75rem;">
             <button id="cancelarAnular" class="btn-secundario">Cancelar</button>
             <button id="confirmarAnular" class="btn-peligro">Confirmar anulación</button>
         </div>
@@ -167,13 +184,13 @@
 </div>
 
 <script>
-    // Orden de inicialización:
-    // 1. Constantes
+    // =============================================
+    // CONSTANTES Y UTILIDADES
+    // =============================================
     const TOKEN = sessionStorage.getItem('airToken');
     const PERMISOS = JSON.parse(sessionStorage.getItem('airPermisos') || '[]');
     const PUEDE_EMITIR = PERMISOS.includes('EMITIR_CERTIFICACION');
 
-    // 2. authFetch y mostrarMensaje
     function authFetch(url, options = {}) {
         return fetch(url, {
             ...options,
@@ -192,87 +209,115 @@
         setTimeout(() => div.remove(), duracion);
     }
 
-    // 3. Verificador (Sección A)
+    // =============================================
+    // VERIFICADOR DE FOLIO
+    // =============================================
     const folioInput = document.getElementById('folioInput');
     const verificarBtn = document.getElementById('verificarBtn');
     const verificadorResultado = document.getElementById('verificadorResultado');
     const folioSugerencias = document.getElementById('folioSugerencias');
 
-    // Mostrar sugerencias mientras se escribe en el campo de folio
-    folioInput.addEventListener('input', async function() {
+    let certificacionesCache = [];
+
+    // Sugerencias de folios (se llenan al cargar la tabla)
+    folioInput.addEventListener('input', function() {
         const term = this.value.trim().toLowerCase();
-        if (certificacionesCache.length === 0) {
-            try {
-                let res = await fetch('/api/certificaciones');
-                if (!res.ok && TOKEN) res = await authFetch('/api/certificaciones');
-                if (res.ok) {
-                    const data = await res.json();
-                    certificacionesCache = Array.isArray(data) ? data : [];
-                }
-            } catch (e) {
-                console.error('No se pudieron cargar folios para sugerencias', e);
-            }
-        }
-        const folios = certificacionesCache.map(c => (c.folio || c.folio_unico || '').toString()).filter(Boolean);
-        const únicos = [...new Set(folios)];
-        const filtrados = únicos.filter(f => f.toLowerCase().includes(term));
+        if (term.length < 1) { folioSugerencias.style.display = 'none'; return; }
+        const folios = certificacionesCache.map(c => c.folio_unico || '').filter(Boolean);
+        const filtrados = [...new Set(folios)].filter(f => f.toLowerCase().includes(term));
         if (filtrados.length === 0) {
             folioSugerencias.style.display = 'none';
-            folioSugerencias.innerHTML = '';
             return;
         }
-        folioSugerencias.innerHTML = filtrados.map(f => `<div style="padding:8px; cursor:pointer;">${f}</div>`).join('');
+        folioSugerencias.innerHTML = filtrados.map(f => `<div style="padding:6px; cursor:pointer; border-bottom:1px solid #eee;">${f}</div>`).join('');
         folioSugerencias.style.display = 'block';
         folioSugerencias.querySelectorAll('div').forEach(div => div.addEventListener('click', () => {
             folioInput.value = div.textContent.trim();
             folioSugerencias.style.display = 'none';
-            folioInput.focus();
         }));
     });
-
-    folioInput.addEventListener('blur', () => setTimeout(() => { folioSugerencias.style.display = 'none'; }, 150));
-    folioInput.addEventListener('focus', async () => { if (folioInput.value.trim() === '') folioInput.dispatchEvent(new Event('input')); });
+    folioInput.addEventListener('blur', () => setTimeout(() => folioSugerencias.style.display = 'none', 200));
 
     verificarBtn.addEventListener('click', async () => {
         const folio = folioInput.value.trim();
-        verificadorResultado.innerHTML = '';
-        if (!folio) return mostrarMensaje('Ingrese un folio para verificar', 'error');
+        if (!folio) return mostrarMensaje('Ingrese un folio', 'error');
         verificarBtn.disabled = true;
+        verificadorResultado.innerHTML = '';
         try {
             const res = await fetch(`/api/certificaciones/verificar/${encodeURIComponent(folio)}`);
-            if (res.status === 404) {
-                verificadorResultado.innerHTML = `<div class="badge inactivo">Folio no encontrado</div>`;
-                return;
-            }
             const data = await res.json();
             if (!res.ok) {
-                verificadorResultado.textContent = 'Error verificando folio';
+                verificadorResultado.innerHTML = `<span class="badge inactivo">Error: ${data.mensaje || 'Folio no encontrado'}</span>`;
                 return;
             }
             if (data.anulada) {
-                verificadorResultado.innerHTML = `<div><span class="badge inactivo">ANULADA</span> Motivo: ${data.motivo || 'No especificado'}</div>`;
+                verificadorResultado.innerHTML = `<span class="badge inactivo">ANULADA</span> Motivo: ${data.motivo || 'No especificado'}`;
             } else {
-                verificadorResultado.innerHTML = `<div><strong>${data.asambleistaNombre || data.nombre || ''}</strong> (${data.asambleistaCedula || data.cedula || ''})<br>Emitida: ${data.fechaEmision || data.fecha || 'N/A'} por ${data.emitidaPor || data.emitida_por || 'N/A'}</div>`;
+                verificadorResultado.innerHTML = `
+                    <div style="margin-top:0.5rem;">
+                        <strong>${data.asambleistaNombre || 'No disponible'}</strong> (${data.asambleistaCedula || 'N/A'})
+                        <br>Emitida: ${data.fechaEmision || 'N/A'} por ${data.emitidaPor || 'N/A'}
+                    </div>
+                `;
             }
         } catch (err) {
             console.error(err);
-            verificadorResultado.textContent = 'Error verificando folio';
-        } finally { verificarBtn.disabled = false; }
+            verificadorResultado.innerHTML = '<span class="badge inactivo">Error verificando folio</span>';
+        } finally {
+            verificarBtn.disabled = false;
+        }
     });
 
-    // 4. cargarTabla() + llamada inicial
+    // =============================================
+    // LISTADO DE CERTIFICACIONES
+    // =============================================
     const tablaLoading = document.getElementById('tablaLoading');
     const tabla = document.getElementById('tablaCertificaciones');
     const tablaBody = document.getElementById('tablaBody');
     const tablaEmpty = document.getElementById('tablaEmpty');
     const filtroCerts = document.getElementById('filtroCerts');
 
-    let certificacionesCache = [];
+    function renderTabla(items) {
+        const filtro = (filtroCerts.value || '').trim().toLowerCase();
+        const filtrados = items.filter(c => {
+            if (!filtro) return true;
+            const nombre = (c.asambleista_nombre || '').toLowerCase();
+            const cedula = (c.cedula || '').toLowerCase();
+            return nombre.includes(filtro) || cedula.includes(filtro);
+        });
+        tablaBody.innerHTML = '';
+        if (filtrados.length === 0) {
+            tabla.classList.add('oculto');
+            tablaEmpty.classList.remove('oculto');
+            return;
+        }
+        tablaEmpty.classList.add('oculto');
+        tabla.classList.remove('oculto');
+        for (const cert of filtrados) {
+            const tr = document.createElement('tr');
+            const estadoBadge = cert.anulada ? `<span class="badge inactivo">ANULADA</span>` : `<span class="badge vigente">VÁLIDA</span>`;
+            const acciones = (!cert.anulada && PUEDE_EMITIR) 
+                ? `<button data-id="${cert.id_certificacion}" data-folio="${cert.folio_unico}" class="anularBtn btn-peligro">Anular</button>`
+                : '—';
+            tr.innerHTML = `
+                <td class="folio-col">${cert.folio_unico || ''}</td>
+                <td class="nombre-col">${cert.asambleista_nombre || ''}</td>
+                <td>${cert.cedula || ''}</td>
+                <td>${cert.fecha_emision ? new Date(cert.fecha_emision).toLocaleDateString() : ''}</td>
+                <td>${cert.usuario_secretaria || ''}</td>
+                <td>${estadoBadge}</td>
+                <td class="acciones-col">${acciones}</td>
+            `;
+            tablaBody.appendChild(tr);
+        }
+        document.querySelectorAll('.anularBtn').forEach(btn => {
+            btn.addEventListener('click', () => abrirModalAnular(btn.dataset.id, btn.dataset.folio));
+        });
+    }
 
     async function cargarTabla() {
         if (!TOKEN) {
             document.getElementById('seccionListado').style.display = 'none';
-            document.getElementById('seccionEmitir').style.display = 'none';
             return;
         }
         document.getElementById('seccionListado').style.display = '';
@@ -281,45 +326,26 @@
         tablaEmpty.classList.add('oculto');
         try {
             const res = await authFetch('/api/certificaciones');
+            if (!res.ok) throw new Error('Error al obtener certificaciones');
             const data = await res.json();
-            certificacionesCache = Array.isArray(data) ? data : [];
+            // El backend devuelve { ok: true, data: [...] } o array directo
+            certificacionesCache = Array.isArray(data) ? data : (data.data || []);
             renderTabla(certificacionesCache);
-        } catch (err) { console.error(err); mostrarMensaje('Error cargando certificaciones', 'error'); }
-        finally { tablaLoading.style.display = 'none'; }
-    }
-
-    function renderTabla(items) {
-        const filtro = (filtroCerts && filtroCerts.value || '').trim().toLowerCase();
-        const filtrados = items.filter(c => {
-            if (!filtro) return true;
-            const nombre = (c.asambleistaNombre || c.nombre || '').toLowerCase();
-            const cedula = (c.asambleistaCedula || c.cedula || '').toLowerCase();
-            return nombre.includes(filtro) || cedula.includes(filtro);
-        });
-        tablaBody.innerHTML = '';
-        if (filtrados.length === 0) { tabla.classList.add('oculto'); tablaEmpty.classList.remove('oculto'); return; }
-        tablaEmpty.classList.add('oculto'); tabla.classList.remove('oculto');
-        for (const cert of filtrados) {
-            const tr = document.createElement('tr');
-            const estadoBadge = cert.anulada ? `<span class="badge inactivo">ANULADA</span>` : `<span class="badge vigente">VÁLIDA</span>`;
-            const acciones = (!cert.anulada && PUEDE_EMITIR) ? `<button data-id="${cert.id}" data-folio="${cert.folio}" class="anularBtn btn-peligro">Anular</button>` : '—';
-            tr.innerHTML = `
-                <td class="folio-col">${cert.folio || ''}</td>
-                <td class="nombre-col">${cert.asambleistaNombre || cert.nombre || ''}</td>
-                <td class="cedula-col">${cert.asambleistaCedula || cert.cedula || ''}</td>
-                <td class="fecha-col">${cert.fechaEmision || cert.fecha || ''}</td>
-                <td>${cert.emitidaPor || cert.emitida_por || ''}</td>
-                <td>${estadoBadge}</td>
-                <td class="acciones-col">${acciones}</td>
-            `;
-            tablaBody.appendChild(tr);
+        } catch (err) {
+            console.error(err);
+            mostrarMensaje('Error cargando certificaciones', 'error');
+        } finally {
+            tablaLoading.style.display = 'none';
         }
-        document.querySelectorAll('.anularBtn').forEach(btn => btn.addEventListener('click', () => abrirModalAnular(btn.dataset.id, btn.dataset.folio)));
     }
 
-    if (filtroCerts) filtroCerts.addEventListener('input', () => renderTabla(certificacionesCache));
+    if (filtroCerts) {
+        filtroCerts.addEventListener('input', () => renderTabla(certificacionesCache));
+    }
 
-    // 5. Modal de anulación
+    // =============================================
+    // MODAL DE ANULACIÓN
+    // =============================================
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitulo = document.getElementById('modalTitulo');
     const motivoAnulacion = document.getElementById('motivoAnulacion');
@@ -331,160 +357,56 @@
         modalTargetId = id;
         modalTitulo.innerText = `Anular certificación ${folio}`;
         motivoAnulacion.value = '';
-        modalOverlay.classList.remove('oculto');
+        modalOverlay.classList.add('abierto');
         modalOverlay.setAttribute('aria-hidden', 'false');
         motivoAnulacion.focus();
     }
-    function cerrarModalAnular() { modalTargetId = null; modalOverlay.classList.add('oculto'); modalOverlay.setAttribute('aria-hidden', 'true'); }
+    function cerrarModalAnular() {
+        modalTargetId = null;
+        modalOverlay.classList.remove('abierto');
+        modalOverlay.setAttribute('aria-hidden', 'true');
+    }
     cancelarAnular.addEventListener('click', cerrarModalAnular);
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) cerrarModalAnular(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modalOverlay.classList.contains('oculto')) cerrarModalAnular(); });
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) cerrarModalAnular();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('abierto')) cerrarModalAnular();
+    });
 
     confirmarAnular.addEventListener('click', async () => {
         const motivo = motivoAnulacion.value.trim();
         if (motivo.length < 10) return mostrarMensaje('El motivo debe tener al menos 10 caracteres', 'error');
         confirmarAnular.disabled = true;
         try {
-            const res = await authFetch(`/api/certificaciones/${modalTargetId}/anular`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ motivo }) });
+            const res = await authFetch(`/api/certificaciones/${modalTargetId}/anular`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motivo })
+            });
             if (!res.ok) throw new Error('Error al anular');
             mostrarMensaje('Certificación anulada correctamente');
             cerrarModalAnular();
             await cargarTabla();
-        } catch (err) { console.error(err); mostrarMensaje('Error anulando certificación', 'error'); }
-        finally { confirmarAnular.disabled = false; }
+        } catch (err) {
+            console.error(err);
+            mostrarMensaje('Error anulando certificación', 'error');
+        } finally {
+            confirmarAnular.disabled = false;
+        }
     });
 
-    // 6. Autocomplete para emitir (si aplica)
-    const emitInput = document.getElementById('emitAsambleistaInput');
-    const emitSugerencias = document.getElementById('emitSugerencias');
-    const emitAsambleistaId = document.getElementById('emitAsambleistaId');
-    let asambleistaSeleccionado = null;
-
-    async function buscarAsambleistas(termino) {
-        const res = await authFetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
-        if (!res.ok) return [];
-        return res.json();
-    }
-
-    if (!PUEDE_EMITIR) {
-        document.getElementById('seccionEmitir').style.display = 'none';
-    } else {
-        document.getElementById('seccionEmitir').style.display = '';
-        if (emitInput) {
-            emitInput.addEventListener('input', async function() {
-                const texto = this.value.trim();
-                if (texto.length < 2) { emitSugerencias.style.display = 'none'; return; }
-                const resultados = await buscarAsambleistas(texto);
-                if (!resultados || resultados.length === 0) { emitSugerencias.style.display = 'none'; return; }
-                emitSugerencias.innerHTML = resultados.map(a => `<div data-id="${a.id}" style="padding:8px; cursor:pointer;">${a.nombre} (${a.cedula})</div>`).join('');
-                emitSugerencias.style.display = 'block';
-                emitSugerencias.querySelectorAll('div').forEach(div => div.addEventListener('click', () => {
-                    const id = div.dataset.id;
-                    asambleistaSeleccionado = resultados.find(r => String(r.id) === String(id));
-                    emitInput.value = `${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})`;
-                    emitAsambleistaId.value = id;
-                    emitSugerencias.style.display = 'none';
-                }));
-            });
-        }
-    }
-
-    // 7. Formulario de emisión
-    const emitirBtn = document.getElementById('emitirBtn');
-    const emitContenido = document.getElementById('emitContenido');
-    const previewFolio = document.getElementById('previewFolio');
-    const emitConfirmacion = document.getElementById('emitConfirmacion');
-    const confirmFolio = document.getElementById('confirmFolio');
-    const confirmHash = document.getElementById('confirmHash');
-
-    async function actualizarPreviewFolio() {
-        try {
-            if (!TOKEN) { previewFolio.innerText = '-'; return; }
-            const res = await authFetch('/api/certificaciones/preview-folio');
-            if (!res.ok) return; const data = await res.json(); previewFolio.innerText = data.folio || '-';
-        } catch (err) { console.error(err); previewFolio.innerText = '-'; }
-    }
-
-    if (PUEDE_EMITIR) {
-        actualizarPreviewFolio();
-        if (emitirBtn) {
-            emitirBtn.addEventListener('click', async () => {
-                if (!emitAsambleistaId.value) return mostrarMensaje('Seleccione un asambleísta válido', 'error');
-                const contenido = emitContenido.value.trim();
-                if (!contenido) return mostrarMensaje('Ingrese el contenido de la certificación', 'error');
-                emitirBtn.disabled = true;
-                try {
-                    const res = await authFetch('/api/certificaciones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ asambleistaId: emitAsambleistaId.value, contenido }) });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.mensaje || 'Error emitiendo');
-                    document.getElementById('confirmFolio').innerText = data.folio || data.folioAsignado || '';
-                    document.getElementById('confirmHash').innerText = data.hash || data.sha256 || data.hashSha256 || '';
-                    document.getElementById('emitConfirmacion').style.display = '';
-                    emitContenido.value = '';
-                    emitAsambleistaId.value = '';
-                    emitInput.value = '';
-                    mostrarMensaje('Certificación emitida correctamente');
-                    await cargarTabla();
-                    actualizarPreviewFolio();
-                } catch (err) { console.error(err); mostrarMensaje('Error emitiendo certificación', 'error'); }
-                finally { emitirBtn.disabled = false; }
-            });
-        }
-    }
-
-    // 8. GENERAR CERTIFICADO - sección independiente
-    const btnGenerar = document.getElementById('btnGenerarCertificado');
-    const resultadoGeneracion = document.getElementById('resultadoGeneracion');
-
-    if (btnGenerar) {
-        btnGenerar.addEventListener('click', async function() {
-            const idAsambleista = document.getElementById('idAsambleistaGenerar').value;
-            const fechaDesde = document.getElementById('fechaDesdeGenerar').value;
-            const fechaHasta = document.getElementById('fechaHastaGenerar').value;
-
-            resultadoGeneracion.style.display = 'block';
-            resultadoGeneracion.innerHTML = ' Generando certificado...';
-            resultadoGeneracion.style.color = '#333';
-
-            try {
-                const token = sessionStorage.getItem('airToken');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-
-                const response = await fetch('/certificaciones/generar-pdf', {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ 
-                        idAsambleista: parseInt(idAsambleista) 
-                    })
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `certificado_${idAsambleista}_${new Date().toISOString().slice(0,10)}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    resultadoGeneracion.innerHTML = ' Certificado generado y descargado correctamente.';
-                    resultadoGeneracion.style.color = 'green';
-                } else {
-                    const error = await response.json();
-                    resultadoGeneracion.innerHTML = ` Error: ${error.error || error.mensaje || 'desconocido'}`;
-                    resultadoGeneracion.style.color = 'red';
-                }
-            } catch (error) {
-                resultadoGeneracion.innerHTML = ` Error de red: ${error.message}`;
-                resultadoGeneracion.style.color = 'red';
-            }
-        });
-    }
-
+    // =============================================
+    // LOGOUT
+    // =============================================
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        sessionStorage.removeItem('airToken'); sessionStorage.removeItem('airRoles'); sessionStorage.removeItem('airPermisos'); window.location.href = '/login';
+        sessionStorage.clear();
+        window.location.href = '/login';
     });
 
+    // =============================================
+    // INICIALIZACIÓN
+    // =============================================
     cargarTabla();
 </script>
 </body>

@@ -367,8 +367,43 @@
     </button>
 
 </div>
+<h3>Agregar integrante(s)</h3>
 
-    <h3>Agregar integrante</h3>
+<!-- Buscador y tags -->
+<div class="form-group">
+    <label>Buscar asambleísta:</label>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="buscarAsambleista" placeholder="Escriba nombre o cédula..." style="flex: 1; min-width: 200px;">
+        <button id="btnAgregarAsambleistaTag" style="white-space: nowrap;">Agregar</button>
+    </div>
+</div>
+
+<!-- Contenedor de tags (asambleístas seleccionados) -->
+<div id="tagsContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; min-height: 40px; padding: 0.5rem; border: 1px dashed #ccd5df; border-radius: 6px; background: #fafbfc;">
+    <!-- Los tags se agregan aquí dinámicamente -->
+</div>
+
+<!-- Lista de sugerencias (autocompletado) -->
+<div id="sugerenciasAsambleistas" style="border: 1px solid #ccd5df; max-height: 150px; overflow-y: auto; display: none; background: white; border-radius: 6px; margin-top: -0.5rem; margin-bottom: 0.75rem;"></div>
+
+<div class="form-group">
+    <label>Rol para todos:</label>
+    <select id="rolMasivo">
+        <option value="Miembro">Miembro</option>
+        <option value="Coordinador">Coordinador</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label>Fecha inicio (para todos):</label>
+    <input type="date" id="fechaInicioMasivo">
+</div>
+
+<button id="btnAgregarIntegrantesMasivo">
+    Agregar integrantes seleccionados
+</button>
+
+<hr style="margin: 1.5rem 0;">
 
 <div class="form-group">
     <label>ID Asambleísta:</label>
@@ -377,17 +412,12 @@
 
 <div class="form-group">
     <label>Rol:</label>
-
     <select id="rolIntegrante">
         <option value="Miembro">Miembro</option>
         <option value="Coordinador">Coordinador</option>
     </select>
 </div>
 
-<div class="form-group">
-    <label>Fecha inicio:</label>
-    <input type="date" id="fechaInicio">
-</div>
 
 <button id="btnAgregarIntegrante">
     Agregar integrante
@@ -782,6 +812,144 @@ async function eliminarComision(id) {
     }
 }
 
+async function cargarAsambleistas() {
+    try {
+        const res = await authFetch('/api/asambleistas');
+        if (!res.ok) throw new Error('Error al cargar asambleístas');
+        const data = await res.json();
+        const select = document.getElementById('asambleistasSelect');
+        select.innerHTML = '';
+        data.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            // Mostrar nombre y cédula para fácil identificación
+            opt.textContent = `${a.nombre} (${a.cedula})`;
+            select.appendChild(opt);
+        });
+    } catch (error) {
+        console.error('Error cargando asambleístas:', error);
+    }
+}
+
+
+// ========== TAGS (multiselect mejorado) ==========
+let asambleistasSeleccionados = []; // Array de objetos { id, nombre, cedula }
+
+async function buscarAsambleistas(termino) {
+    if (termino.length < 2) return [];
+    const res = await authFetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
+    if (!res.ok) return [];
+    return res.json();
+}
+
+function renderTags() {
+    const container = document.getElementById('tagsContainer');
+    if (asambleistasSeleccionados.length === 0) {
+        container.innerHTML = '<span style="color: #8899aa; font-size: 0.9rem;">No hay asambleístas seleccionados</span>';
+        return;
+    }
+    container.innerHTML = asambleistasSeleccionados.map(a => `
+        <span style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #e9ecef;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid #ccd5df;
+        ">
+            ${a.nombre} (${a.cedula})
+            <span style="
+                cursor: pointer;
+                color: #a11d33;
+                font-weight: bold;
+                font-size: 1.1rem;
+                line-height: 1;
+            " data-id="${a.id}" class="eliminar-tag">&times;</span>
+        </span>
+    `).join('');
+
+    // Evento para eliminar tags
+    document.querySelectorAll('.eliminar-tag').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = parseInt(el.dataset.id);
+            asambleistasSeleccionados = asambleistasSeleccionados.filter(a => a.id !== id);
+            renderTags();
+        });
+    });
+}
+
+// Buscador con autocompletado
+const inputBuscarAsambleista = document.getElementById('buscarAsambleista');
+const sugerenciasDiv = document.getElementById('sugerenciasAsambleistas');
+let timeoutBusqueda = null;
+
+inputBuscarAsambleista.addEventListener('input', async function() {
+    const texto = this.value.trim();
+    if (texto.length < 2) {
+        sugerenciasDiv.style.display = 'none';
+        return;
+    }
+
+    clearTimeout(timeoutBusqueda);
+    timeoutBusqueda = setTimeout(async () => {
+        const resultados = await buscarAsambleistas(texto);
+        if (resultados.length === 0) {
+            sugerenciasDiv.innerHTML = '<div style="padding: 0.5rem; color: #8899aa;">No se encontraron asambleístas</div>';
+            sugerenciasDiv.style.display = 'block';
+            return;
+        }
+        sugerenciasDiv.innerHTML = resultados.map(a => `
+            <div style="
+                padding: 0.5rem 0.75rem;
+                cursor: pointer;
+                border-bottom: 1px solid #eee;
+                transition: background 0.15s;
+            " data-id="${a.id}" data-nombre="${a.nombre}" data-cedula="${a.cedula}">
+                ${a.nombre} (${a.cedula})
+            </div>
+        `).join('');
+        sugerenciasDiv.style.display = 'block';
+
+        // Al hacer clic en una sugerencia, agregarla a tags
+        sugerenciasDiv.querySelectorAll('div').forEach(div => {
+            div.addEventListener('click', () => {
+                const id = parseInt(div.dataset.id);
+                const nombre = div.dataset.nombre;
+                const cedula = div.dataset.cedula;
+                // Evitar duplicados
+                if (asambleistasSeleccionados.some(a => a.id === id)) {
+                    alert('Este asambleísta ya está seleccionado');
+                    return;
+                }
+                asambleistasSeleccionados.push({ id, nombre, cedula });
+                renderTags();
+                inputBuscarAsambleista.value = '';
+                sugerenciasDiv.style.display = 'none';
+            });
+        });
+    }, 300);
+});
+
+// Ocultar sugerencias al perder foco
+inputBuscarAsambleista.addEventListener('blur', () => {
+    setTimeout(() => { sugerenciasDiv.style.display = 'none'; }, 200);
+});
+
+// Botón "Agregar" (desde el campo de búsqueda)
+document.getElementById('btnAgregarAsambleistaTag').addEventListener('click', () => {
+    const primerSugerencia = sugerenciasDiv.querySelector('div');
+    if (primerSugerencia) {
+        primerSugerencia.click();
+    } else {
+        alert('Primero busque un asambleísta en la lista de sugerencias');
+    }
+});
+
+// Inicializar tags vacíos
+renderTags();
+
 async function verIntegrantes(idComision) {
 
     comisionSeleccionada = idComision;
@@ -996,6 +1164,49 @@ async function cargarPorcentajes(idComision) {
 
     `).join('');
 }
+
+document.getElementById('btnAgregarIntegrantesMasivo').addEventListener('click', async () => {
+    const select = document.getElementById('asambleistasSelect');
+    const selectedOptions = Array.from(select.selectedOptions);
+    const ids = selectedOptions.map(opt => parseInt(opt.value));
+
+    if (ids.length === 0) {
+        alert('Seleccione al menos un asambleísta');
+        return;
+    }
+
+    const rol = document.getElementById('rolMasivo').value;
+    const fecha_inicio = document.getElementById('fechaInicioMasivo').value;
+
+    if (!fecha_inicio) {
+        alert('Seleccione una fecha de inicio');
+        return;
+    }
+
+    const integrantes = ids.map(id => ({
+        asambleista_id: id,
+        rol: rol,
+        fecha_inicio: fecha_inicio,
+        fecha_fin: null
+    }));
+
+    const res = await authFetch(`/comisiones/${comisionSeleccionada}/integrantes-masivo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ integrantes })
+    });
+
+    if (res.ok) {
+        alert('Integrantes agregados correctamente');
+        verIntegrantes(comisionSeleccionada);
+        // Limpiar selección (opcional)
+        document.getElementById('asambleistasSelect').selectedIndex = -1;
+        document.getElementById('fechaInicioMasivo').value = '';
+    } else {
+        const err = await res.json();
+        alert(err.mensaje || 'Error al agregar integrantes');
+    }
+});
 
 function editarIntegrante(
     idIntegrante,
@@ -1223,6 +1434,7 @@ document.getElementById('btnAgregarIntegrante').addEventListener('click', async 
 });
 
 cargarComisiones();
+cargarAsambleistas();
 
 </script>
 

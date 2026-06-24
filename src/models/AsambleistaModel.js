@@ -31,7 +31,10 @@ async function obtenerPorId(id) {
                 a.correo_institucional AS correo,
                 COALESCE(cs.nombre, 'Sin sector') AS sector,
                 CASE 
-                    WHEN n.fecha_fin IS NULL AND n.estado = 'ACTIVO' THEN true
+                    WHEN n.estado = 'ACTIVO' 
+                        AND n.fecha_inicio <= CURRENT_DATE
+                        AND (n.fecha_fin IS NULL OR n.fecha_fin >= CURRENT_DATE)
+                    THEN true
                     ELSE false
                 END AS vigente,
                 n.fecha_inicio,
@@ -62,7 +65,10 @@ async function listarTodos() {
                 a.correo_institucional AS correo,
                 COALESCE(cs.nombre, 'Sin sector') AS sector,
                 CASE 
-                    WHEN n.fecha_fin IS NULL AND n.estado = 'ACTIVO' THEN true
+                    WHEN n.estado = 'ACTIVO' 
+                        AND n.fecha_inicio <= CURRENT_DATE
+                        AND (n.fecha_fin IS NULL OR n.fecha_fin >= CURRENT_DATE)
+                    THEN true
                     ELSE false
                 END AS vigente
             FROM asambleista a

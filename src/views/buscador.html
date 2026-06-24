@@ -41,6 +41,12 @@
         .btn-secundario {
             background-color: #6c757d;
         }
+        .btn-exito {
+            background-color: #28a745;
+        }
+        .btn-exito:hover {
+            background-color: #1e7e34;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -61,7 +67,7 @@
         label {
             font-weight: bold;
             display: inline-block;
-            width: 120px;
+            width: 140px;
         }
         input, select {
             padding: 0.4rem;
@@ -154,6 +160,79 @@
                 justify-content: flex-start;
             }
         }
+
+        /* Estilos para el modal de previsualización */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.abierto {
+            display: flex;
+        }
+        .modal-contenido {
+            background: white;
+            max-width: 90%;
+            max-height: 90vh;
+            width: 800px;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+        .modal-contenido .cerrar-modal {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-contenido .acciones-modal {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        .cert-preview {
+            font-family: 'Times New Roman', Times, serif;
+            background: white;
+            padding: 1.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .cert-preview .folio {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .cert-preview .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .cert-preview .header h1 {
+            font-size: 1.2rem;
+            margin: 0.2rem 0;
+        }
+        .cert-preview .propuesta {
+            margin-top: 0.8rem;
+            border-top: 1px solid #ccc;
+            padding-top: 0.5rem;
+        }
+        .cert-preview .nota {
+            font-style: italic;
+            color: #555;
+            font-size: 0.8rem;
+        }
+        .cert-preview .footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -203,21 +282,25 @@
     </div>
 
     <div id="infoAsambleista" class="resultado" style="display:none;">
-        <h3>📌 Información del asambleísta seleccionado</h3>
+        <h3> Información del asambleísta seleccionado</h3>
         <p><strong>Nombre:</strong> <span id="infoNombre"></span></p>
         <p><strong>Cédula:</strong> <span id="infoCedula"></span></p>
         <p><strong>Sector actual:</strong> <span id="infoSector"></span> <span id="infoVigencia" class="badge"></span></p>
     </div>
 
     <div id="resultadoConsulta" class="resultado" style="display:none;">
-        <h3>📄 Resultado de la consulta</h3>
+        <h3> Resultado de la consulta</h3>
         <pre id="detalleConsulta" style="background:#f4f4f4; padding:1rem; border-radius:4px;"></pre>
+        <div id="accionesCertificado" style="margin-top:1rem; display:none;">
+            <button id="btnPrevisualizar" class="btn-exito"> Previsualizar certificado</button>
+            <button id="btnDescargarPDF" class="btn-exito"> Descargar PDF</button>
+        </div>
     </div>
 </div>
 
 <hr>
 
-<!-- Gestion de asambleistas y nombramientos -->
+<!-- Gestión de asambleístas y nombramientos -->
 <div class="seccion">
     <h2>Administración de Asambleístas y Nombramientos</h2>
 
@@ -248,48 +331,66 @@
     </div>
 
     <!-- Sección de nombramientos (maestro-detalle) – se muestra solo cuando se edita un asambleísta existente -->
-    <div id="nombramientosContainer" style="display:none; margin-top:2rem; border-top:1px solid #ccc; padding-top:1rem;">
-        <h3>📅 Nombramientos (periodos de gestión)</h3>
-        <table id="tablaNombramientos">
-            <thead>
-                <tr><th>Sector</th><th>Puesto</th><th>Resolución</th><th>Fecha inicio</th><th>Fecha fin</th><th>Estado</th><th>Acciones</th></tr>
-            </thead>
-            <tbody id="tablaNombramientosBody"></tbody>
-        </table>
-        <button id="btnMostrarFormNombramiento">+ Agregar nombramiento</button>
+<div id="nombramientosContainer" style="display:none; margin-top:2rem; border-top:1px solid #ccc; padding-top:1rem;">
+    <h3> Nombramientos (periodos de gestión)</h3>
+    <table id="tablaNombramientos">
+        <thead>
+            <tr><th>Sector</th><th>Puesto</th><th>Resolución</th><th>Fecha inicio</th><th>Fecha fin</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="tablaNombramientosBody"></tbody>
+    </table>
+    <button id="btnMostrarFormNombramiento">+ Agregar nombramiento</button>
 
-        <!-- Formulario para agregar/editar nombramiento (oculto) -->
-        <div id="formNombramiento" style="display:none; margin-top:1rem; background:#f1f1f1; padding:1rem;">
-            <h4>Nombramiento</h4>
-            <input type="hidden" id="nombramientoId">
-            <div class="form-group"><label>Sector:</label>
-                <select id="nombramientoSectorId"></select>
+    <!-- Formulario para agregar/editar nombramiento (oculto) -->
+    <div id="formNombramiento" style="display:none; margin-top:1rem; background:#f1f1f1; padding:1rem;">
+        <h4>Nombramiento</h4>
+        <input type="hidden" id="nombramientoId">
+        <div class="form-group"><label>Sector:</label>
+            <select id="nombramientoSectorId"></select>
+        </div>
+        <div class="form-group"><label>Puesto:</label>
+            <select id="nombramientoPuestoId"></select>
+        </div>
+        <div class="form-group"><label>Resolución ID:</label>
+            <input type="number" id="nombramientoResolucionId" placeholder="ID de resolución existente">
+        </div>
+        <div class="form-group"><label>Fecha inicio:</label>
+            <input type="date" id="nombramientoFechaInicio">
+        </div>
+        <div class="form-group"><label>Fecha fin (opcional):</label>
+            <input type="date" id="nombramientoFechaFin">
+        </div>
+        <div class="form-group"><label>Estado:</label>
+            <select id="nombramientoEstado">
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+            </select>
+        </div>
+        <button id="guardarNombramientoBtn">Guardar nombramiento</button>
+        <button id="cancelarNombramientoBtn" class="btn-secundario">Cancelar</button>
+        <div id="nombramientoResultado" style="margin-top:0.5rem;"></div>
+    </div>
+</div>
+
+<!-- Modal de previsualización de certificado -->
+<div id="modalPrevisualizacion" class="modal-overlay">
+    <div class="modal-contenido">
+        <button class="cerrar-modal" id="cerrarModalPreview">&times;</button>
+        <h3> Previsualización del certificado</h3>
+        <div id="contenidoPreview" style="max-height:70vh; overflow-y:auto;">
+            <div class="cert-preview" id="certPreviewHtml">
+                <p>Cargando previsualización...</p>
             </div>
-            <div class="form-group"><label>Puesto:</label>
-                <select id="nombramientoPuestoId"></select>
-            </div>
-            <div class="form-group"><label>Resolución ID:</label>
-                <input type="number" id="nombramientoResolucionId">
-            </div>
-            <div class="form-group"><label>Fecha inicio:</label>
-                <input type="date" id="nombramientoFechaInicio">
-            </div>
-            <div class="form-group"><label>Fecha fin (opcional):</label>
-                <input type="date" id="nombramientoFechaFin">
-            </div>
-            <div class="form-group"><label>Estado:</label>
-                <select id="nombramientoEstado">
-                    <option value="ACTIVO">ACTIVO</option>
-                    <option value="INACTIVO">INACTIVO</option>
-                </select>
-            </div>
-            <button id="guardarNombramientoBtn">Guardar nombramiento</button>
-            <button id="cancelarNombramientoBtn" class="btn-secundario">Cancelar</button>
+        </div>
+        <div class="acciones-modal">
+            <button id="btnDescargarDesdeModal" class="btn-exito"> Descargar PDF</button>
+            <button id="btnCerrarModal" class="btn-secundario">Cerrar</button>
         </div>
     </div>
 </div>
 
 <script>
+    // ========== LOGOUT Y PERMISOS ==========
     document.getElementById('logoutBtn').addEventListener('click', () => {
         sessionStorage.removeItem('airToken');
         sessionStorage.removeItem('airRoles');
@@ -311,6 +412,14 @@
         });
     }
 
+    function mostrarMensaje(texto, esError = false) {
+        const div = document.createElement('div');
+        div.innerText = texto;
+        div.className = 'mensaje-flotante' + (esError ? ' error-flotante' : '');
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
+
     function aplicarPermisosVista() {
         document.getElementById('btnNuevoAsambleista').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
         document.getElementById('btnMostrarFormNombramiento').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
@@ -318,8 +427,9 @@
         document.getElementById('guardarNombramientoBtn').style.display = PUEDE_GESTIONAR_ASAMBLEISTAS ? '' : 'none';
     }
 
-    // Lógica del buscador
+    // ========== BUSCADOR ==========
     let asambleistaSeleccionado = null;
+    let datosConsulta = null; // para guardar los datos del asambleísta consultado
 
     async function buscarAsambleistas(termino) {
         const res = await authFetch(`/api/asambleistas/buscar?termino=${encodeURIComponent(termino)}`);
@@ -377,61 +487,194 @@
         rangoDiv.style.display = chkTodo.checked ? 'none' : 'flex';
     });
 
-    document.getElementById('consultarBtn').addEventListener('click', () => {
+    // Botón Consultar
+    document.getElementById('consultarBtn').addEventListener('click', async () => {
         if (!asambleistaSeleccionado) {
             alert('Seleccione un asambleísta de la lista.');
             return;
         }
         let periodo = '';
+        let fechaDesde = null;
+        let fechaHasta = null;
         if (chkTodo.checked) {
             periodo = 'Todo el historial';
         } else {
-            const desde = document.getElementById('fechaDesde').value;
-            const hasta = document.getElementById('fechaHasta').value;
-            if (!desde || !hasta) {
+            fechaDesde = document.getElementById('fechaDesde').value;
+            fechaHasta = document.getElementById('fechaHasta').value;
+            if (!fechaDesde || !fechaHasta) {
                 alert('Especifique ambas fechas o marque todo el historial');
                 return;
             }
-            periodo = `${desde} al ${hasta}`;
+            periodo = `${fechaDesde} al ${fechaHasta}`;
         }
-        const mensaje = `Consulta para: ${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})\n Periodo: ${periodo}\n\n La certificación se generará para el sprint 3.`;
+        // Guardamos los datos para usar en la previsualización
+        datosConsulta = {
+            idAsambleista: asambleistaSeleccionado.id,
+            nombre: asambleistaSeleccionado.nombre,
+            cedula: asambleistaSeleccionado.cedula,
+            fechaDesde: fechaDesde,
+            fechaHasta: fechaHasta,
+            periodo: periodo
+        };
+
+        const mensaje = `Consulta para: ${asambleistaSeleccionado.nombre} (${asambleistaSeleccionado.cedula})\nPeriodo: ${periodo}`;
         document.getElementById('detalleConsulta').innerText = mensaje;
         document.getElementById('resultadoConsulta').style.display = 'block';
+        document.getElementById('accionesCertificado').style.display = 'block';
     });
 
-    // CRUD de asambleístas y nombramientos
-    let asambleistaActualId = null;   // ID del asambleísta que se está editando
+    // ========== PREVISUALIZACIÓN Y DESCARGA DE CERTIFICADO ==========
+    const modalPreview = document.getElementById('modalPrevisualizacion');
+    const contenidoPreview = document.getElementById('contenidoPreview');
+    const certPreviewHtml = document.getElementById('certPreviewHtml');
+
+    document.getElementById('btnPrevisualizar').addEventListener('click', async () => {
+        if (!datosConsulta) return alert('Primero realice una consulta.');
+        try {
+            // Llamada al endpoint de previsualización (HTML)
+            const res = await authFetch('/api/certificaciones/previsualizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idAsambleista: datosConsulta.idAsambleista,
+                    fechaDesde: datosConsulta.fechaDesde,
+                    fechaHasta: datosConsulta.fechaHasta
+                })
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.mensaje || 'Error al generar previsualización');
+            }
+            const html = await res.text();
+            certPreviewHtml.innerHTML = html;
+            modalPreview.classList.add('abierto');
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Cerrar modal
+    function cerrarModalPreview() {
+        modalPreview.classList.remove('abierto');
+    }
+    document.getElementById('cerrarModalPreview').addEventListener('click', cerrarModalPreview);
+    document.getElementById('btnCerrarModal').addEventListener('click', cerrarModalPreview);
+    modalPreview.addEventListener('click', (e) => {
+        if (e.target === modalPreview) cerrarModalPreview();
+    });
+
+    // Descargar PDF desde el modal
+    document.getElementById('btnDescargarDesdeModal').addEventListener('click', async () => {
+        if (!datosConsulta) return alert('No hay datos para generar el PDF.');
+        try {
+            const res = await authFetch('/api/certificaciones/generar-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idAsambleista: datosConsulta.idAsambleista,
+                    fechaDesde: datosConsulta.fechaDesde,
+                    fechaHasta: datosConsulta.fechaHasta
+                })
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.mensaje || 'Error al generar PDF');
+            }
+            const blob = await res.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `certificado_${datosConsulta.idAsambleista}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            mostrarMensaje('PDF descargado correctamente');
+            cerrarModalPreview();
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Descargar PDF desde la sección de resultado (botón directo)
+    document.getElementById('btnDescargarPDF').addEventListener('click', async () => {
+        if (!datosConsulta) return alert('Primero realice una consulta.');
+        try {
+            const res = await authFetch('/api/certificaciones/generar-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idAsambleista: datosConsulta.idAsambleista,
+                    fechaDesde: datosConsulta.fechaDesde,
+                    fechaHasta: datosConsulta.fechaHasta
+                })
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.mensaje || 'Error al generar PDF');
+            }
+            const blob = await res.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `certificado_${datosConsulta.idAsambleista}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            mostrarMensaje('PDF descargado correctamente');
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // ========== CRUD DE ASAMBLEÍSTAS Y NOMBRAMIENTOS ==========
+    let asambleistaActualId = null;
 
     // Cargar listado de asambleístas
-    async function cargarListadoAsambleistas() {
-        const res = await authFetch('/api/asambleistas');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('tablaAsambleistasBody');
-        const filtro = document.getElementById('filtroListado').value.toLowerCase();
-        const filtrados = data.filter(a => a.nombre.toLowerCase().includes(filtro) || a.cedula.includes(filtro));
-        tbody.innerHTML = filtrados.map(a => `
-            <tr>
-                <td>${a.id}</td><td>${a.cedula}</td><td>${a.nombre}</td><td>${a.correo}</td>
-                <td>${a.sector || 'Sin sector'}</td>
-                <td>${a.vigente ? 'VIGENTE' : 'INACTIVO'}</td>
-                <td>
-                    <button onclick="editarAsambleista(${a.id})">${PUEDE_GESTIONAR_ASAMBLEISTAS ? 'Editar' : 'Ver'}</button>
-                    ${PUEDE_GESTIONAR_ASAMBLEISTAS ? `<button onclick="eliminarAsambleista(${a.id})" class="btn-peligro">Eliminar</button>` : ''}
-                </td>
-            </tr>
-        `).join('');
-    }
+async function cargarListadoAsambleistas() {
+    const res = await authFetch('/api/asambleistas');
+    if (!res.ok) return;
+    const data = await res.json();
+    const tbody = document.getElementById('tablaAsambleistasBody');
+    const filtro = document.getElementById('filtroListado').value.toLowerCase();
+
+    // Agrupar por ID (tomar el registro que tenga vigente = true, o el primero)
+    const agrupados = {};
+    data.forEach(item => {
+        if (!agrupados[item.id] || item.vigente === true) {
+            agrupados[item.id] = item;
+        }
+    });
+    const asambleistas = Object.values(agrupados);
+
+    const filtrados = asambleistas.filter(a =>
+        a.nombre.toLowerCase().includes(filtro) || a.cedula.includes(filtro)
+    );
+
+    tbody.innerHTML = filtrados.map(a => `
+        <tr>
+            <td>${a.id}</td>
+            <td>${a.cedula}</td>
+            <td>${a.nombre}</td>
+            <td>${a.correo}</td>
+            <td>${a.sector || 'Sin sector'}</td>
+            <td>${a.vigente ? 'VIGENTE' : 'INACTIVO'}</td>
+            <td>
+                <button onclick="editarAsambleista(${a.id})">${PUEDE_GESTIONAR_ASAMBLEISTAS ? 'Editar' : 'Ver'}</button>
+                ${PUEDE_GESTIONAR_ASAMBLEISTAS ? `<button onclick="eliminarAsambleista(${a.id})" class="btn-peligro">Eliminar</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
 
     // Mostrar formulario para nuevo asambleísta
     document.getElementById('btnNuevoAsambleista').onclick = () => {
+        // Ocultar formulario de nombramiento si está abierto
+        document.getElementById('formNombramiento').style.display = 'none';
+        document.getElementById('nombramientosContainer').style.display = 'none';
         document.getElementById('formAsambleistaTitulo').innerText = 'Nuevo Asambleísta';
         document.getElementById('asambleistaId').value = '';
         document.getElementById('editCedula').value = '';
         document.getElementById('editNombre').value = '';
         document.getElementById('editCorreo').value = '';
         document.getElementById('formAsambleista').style.display = 'block';
-        document.getElementById('nombramientosContainer').style.display = 'none';
         asambleistaActualId = null;
     };
 
@@ -439,6 +682,8 @@
         const res = await authFetch(`/api/asambleistas/${id}`);
         if (!res.ok) return alert('Error al cargar datos');
         const data = await res.json();
+        // Ocultar formulario de nombramiento
+        document.getElementById('formNombramiento').style.display = 'none';
         document.getElementById('formAsambleistaTitulo').innerText = PUEDE_GESTIONAR_ASAMBLEISTAS ? 'Editar Asambleísta' : 'Detalle de Asambleísta';
         document.getElementById('asambleistaId').value = data.id;
         document.getElementById('editCedula').value = data.cedula;
@@ -493,12 +738,10 @@
             mostrarMensaje(id ? 'Asambleísta actualizado' : 'Asambleísta creado');
             await cargarListadoAsambleistas();
             if (!id) {
-                // Si era nuevo, limpiamos el formulario y ocultamos
                 document.getElementById('formAsambleista').style.display = 'none';
                 document.getElementById('nombramientosContainer').style.display = 'none';
                 asambleistaActualId = null;
             } else {
-                // Si editamos, recargamos nombramientos
                 await cargarNombramientos(asambleistaActualId);
             }
         } else {
@@ -514,11 +757,16 @@
     };
 
     // Nombramientos
-    async function cargarNombramientos(asambleistaId) {
+async function cargarNombramientos(asambleistaId) {
+    const tbody = document.getElementById('tablaNombramientosBody');
+    try {
         const res = await authFetch(`/api/asambleistas/${asambleistaId}/nombramientos`);
-        if (!res.ok) return;
+        if (!res.ok) {
+            // Si la respuesta no es OK, lanzar error con el código y mensaje
+            const errorText = await res.text();
+            throw new Error(`Error ${res.status}: ${errorText || res.statusText}`);
+        }
         const data = await res.json();
-        const tbody = document.getElementById('tablaNombramientosBody');
         if (data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7">Sin nombramientos registrados</td></tr>';
         } else {
@@ -537,24 +785,51 @@
                 </tr>
             `).join('');
         }
+    } catch (error) {
+        console.error('Error cargando nombramientos:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="color:red;"> Error: ${error.message}</td></tr>`;
     }
+}
 
-    // Precargar catálogos para los selects (sectores y puestos)
+    // Cargar selectores de sectores y puestos desde la BD
     async function cargarCatalogos() {
-        // Obtener sectores desde catalogo_sector (necesitas un endpoint o lo hacemos directo)
-        // Por simplicidad, usaremos un fetch a un endpoint que aún no existe; podemos crear una ruta temporal en app.js.
-        // Para no complicar, haremos una función que rellene con opciones fijas mientras tanto.
-        // Pero lo correcto es que tu equipo cree /api/catalogos/sectores y /api/catalogos/puestos.
-        // Como es colaboración, crearemos los selects con opciones estáticas pero funcionales.
-        const sectorSelect = document.getElementById('nombramientoSectorId');
-        sectorSelect.innerHTML = '<option value="1">Docente</option><option value="2">Administrativo</option><option value="3">Estudiante</option>';
-        const puestoSelect = document.getElementById('nombramientoPuestoId');
-        puestoSelect.innerHTML = '<option value="1">Asambleísta</option><option value="2">Presidente</option><option value="3">Secretario</option>';
+        try {
+            // Intentar obtener desde la BD
+            const sectoresRes = await authFetch('/api/catalogos/sectores');
+            if (sectoresRes.ok) {
+                const sectores = await sectoresRes.json();
+                const sectorSelect = document.getElementById('nombramientoSectorId');
+                sectorSelect.innerHTML = sectores.map(s => `<option value="${s.id_sector}">${s.nombre}</option>`).join('');
+            } else {
+                // Fallback con todos los valores posibles
+                document.getElementById('nombramientoSectorId').innerHTML = `
+                    <option value="1">Docente</option>
+                    <option value="2">Administrativo</option>
+                    <option value="3">Estudiante</option>
+                    <option value="4">Egresado</option>
+                    <option value="5">Funcionario</option>
+                `;
+            }
+            const puestosRes = await authFetch('/api/catalogos/puestos');
+            if (puestosRes.ok) {
+                const puestos = await puestosRes.json();
+                const puestoSelect = document.getElementById('nombramientoPuestoId');
+                puestoSelect.innerHTML = puestos.map(p => `<option value="${p.id_puesto}">${p.nombre_puesto}</option>`).join('');
+            } else {
+                document.getElementById('nombramientoPuestoId').innerHTML = `
+                    <option value="1">Presidente</option>
+                    <option value="2">Vicepresidente</option>
+                    <option value="3">Secretario</option>
+                    <option value="4">Vocal</option>
+                `;
+            }
+        } catch (e) {
+            console.error('Error cargando catálogos:', e);
+        }
     }
 
     window.editarNombramiento = async (id) => {
         if (!PUEDE_GESTIONAR_ASAMBLEISTAS) return alert('No tenes permisos para esta accion');
-        // Obtener datos del nombramiento (necesitas un GET /api/nombramientos/:id)
         const res = await authFetch(`/api/nombramientos/${id}`);
         if (!res.ok) return alert('Error al cargar nombramiento');
         const data = await res.json();
@@ -586,6 +861,9 @@
             alert('Primero guarde o seleccione un asambleísta');
             return;
         }
+        // Ocultar formulario de asambleísta para evitar confusión
+        document.getElementById('formAsambleista').style.display = 'none';
+        // Limpiar campos del formulario de nombramiento
         document.getElementById('nombramientoId').value = '';
         document.getElementById('nombramientoSectorId').value = '';
         document.getElementById('nombramientoPuestoId').value = '';
@@ -635,14 +913,6 @@
     document.getElementById('cancelarNombramientoBtn').onclick = () => {
         document.getElementById('formNombramiento').style.display = 'none';
     };
-
-    function mostrarMensaje(texto, esError = false) {
-        const div = document.createElement('div');
-        div.innerText = texto;
-        div.className = 'mensaje-flotante' + (esError ? ' error-flotante' : '');
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 3000);
-    }
 
     // Filtro en el listado
     document.getElementById('filtroListado').addEventListener('input', () => cargarListadoAsambleistas());
