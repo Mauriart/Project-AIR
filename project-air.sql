@@ -1011,27 +1011,59 @@ CREATE TABLE proponente_propuesta (
 
 ALTER TABLE propuesta ADD COLUMN IF NOT EXISTS origen VARCHAR(50) DEFAULT 'otro';
 
+-- VISTA PRINCIPAL: Validación Cruzada unificada de nombramientos, comisiones, propuestas y asistencias
 CREATE OR REPLACE VIEW vista_certificacion AS
 SELECT 
     a.asambleista_id,
     a.cedula,
     a.nombre,
     a.correo_institucional,
+    -- NOMBRAMIENTOS
+    n.nombramiento_id,
     n.sector_id,
     cs.nombre AS sector_nombre,
     n.fecha_inicio AS nombramiento_inicio,
     n.fecha_fin AS nombramiento_fin,
+    -- PROPUESTAS
     p.id_propuesta,
-    p.titulo,
+    p.titulo AS propuesta_titulo,
     p.codigo_air,
     p.origen,
+    -- COMISIONES
+    c.id_comision,
+    c.nombre AS comision_nombre,
+    ic.rol AS rol_en_comision,
+    ic.fecha_inicio AS integrante_inicio,
+    ic.fecha_fin AS integrante_fin,
+    -- SESIONES Y ASISTENCIAS AGREGADAS
     ses.numero_sesion,
     ses.fecha AS sesion_fecha,
+    -- Función de agregación: Conteo de asistencias a sesiones plenarias
     COALESCE((
         SELECT COUNT(DISTINCT asp.id_asistencia)
         FROM asistencia_sesion_plenaria asp
         WHERE asp.id_asambleista = a.asambleista_id
-    ), 0) AS total_asistencias_plenarias
+    ), 0) AS total_asistencias_plenarias,
+    -- Función de agregación: Conteo de comisiones activas
+    COALESCE((
+        SELECT COUNT(DISTINCT ic2.id_comision)
+        FROM integrante_comision ic2
+        WHERE ic2.asambleista_id = a.asambleista_id
+        AND ic2.estado = 'Activo'
+        AND (ic2.fecha_fin IS NULL OR ic2.fecha_fin >= CURRENT_DATE)
+    ), 0) AS total_comisiones_activas,
+    -- Función de agregación: Conteo de asistencias a sesiones de comisiones
+    COALESCE((
+        SELECT COUNT(DISTINCT ac.id_asistencia)
+        FROM asistencia_sesion_comision ac
+        WHERE ac.asambleista_id = a.asambleista_id
+    ), 0) AS total_asistencias_comisiones,
+    -- Función de agregación: Conteo de propuestas como proponente
+    COALESCE((
+        SELECT COUNT(DISTINCT pp2.id_propuesta)
+        FROM proponente_propuesta pp2
+        WHERE pp2.id_asambleista = a.asambleista_id
+    ), 0) AS total_propuestas_como_proponente
 FROM asambleista a
 LEFT JOIN nombramiento n 
     ON a.asambleista_id = n.asambleista_id
@@ -1046,6 +1078,13 @@ LEFT JOIN punto_agenda pa
     ON p.id_propuesta = pa.id_propuesta
 LEFT JOIN sesiones ses 
     ON pa.id_sesion = ses.id_sesion
-GROUP BY a.asambleista_id, n.sector_id, cs.nombre, n.fecha_inicio, n.fecha_fin,
-         p.id_propuesta, p.titulo, p.codigo_air, p.origen, ses.numero_sesion, ses.fecha
+LEFT JOIN integrante_comision ic
+    ON a.asambleista_id = ic.asambleista_id
+LEFT JOIN comision c
+    ON ic.id_comision = c.id_comision
+GROUP BY a.asambleista_id, a.cedula, a.nombre, a.correo_institucional,
+         n.nombramiento_id, n.sector_id, cs.nombre, n.fecha_inicio, n.fecha_fin,
+         p.id_propuesta, p.titulo, p.codigo_air, p.origen,
+         c.id_comision, c.nombre, ic.rol, ic.fecha_inicio, ic.fecha_fin,
+         ses.numero_sesion, ses.fecha
 ORDER BY a.asambleista_id, ses.fecha DESC;
