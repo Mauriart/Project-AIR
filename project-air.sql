@@ -917,6 +917,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION fn_validar_quorum_voto()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT validar_quorum_legal(NEW.id_sesion) THEN
+        RAISE EXCEPTION 'No hay quórum legal para registrar esta votación.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_validar_quorum
+BEFORE INSERT ON votacion_acuerdo
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_quorum_voto();
+
 -- =========================================
 -- SPRINT 3: Issue #13 — Anulación de certificaciones
 -- =========================================
