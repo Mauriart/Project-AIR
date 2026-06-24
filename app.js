@@ -14,22 +14,21 @@ app.use(express.urlencoded({ extended: true }));
 const { verificarAutenticacion, requierePermiso } = require('./src/controllers/AuthController');
 const authRoutes = require('./src/controllers/AuthController');
 const normativaRoutes = require('./src/controllers/NormativaController');
-const comisionRoutes = require('./src/controllers/ComisionController');
 const certificacionRoutes = require('./src/controllers/CertificacionController');
-const reporteRoutes = require('./src/controllers/ReporteController');
 const asambleistaController = require('./src/controllers/asambleistaController');
 const sesionRoutes = require('./src/controllers/SesionController');
 const votacionRoutes = require('./src/controllers/VotacionController');
-
+const comisionesRoutes = require('./src/controllers/ComisionController');
+const reportesRoutes = require('./src/controllers/ReporteController');
 
 // Rutas públicas / autenticación
 app.use('/auth', authRoutes);
 app.use('/normativa', normativaRoutes);
-app.use('/comisiones', comisionRoutes);
 app.use('/certificaciones', certificacionRoutes);
-app.use('/reportes', reporteRoutes);
 app.use('/sesiones', sesionRoutes);
 app.use('/votaciones', votacionRoutes);
+app.use('/comisiones', comisionesRoutes);
+app.use('/reportes', reportesRoutes);
 
 // Rutas buscador
 app.get('/api/asambleistas/buscar', verificarAutenticacion, asambleistaController.buscarAsambleistas);
@@ -49,8 +48,6 @@ app.post('/api/asambleistas/:id/nombramientos', verificarAutenticacion, requiere
 app.put('/api/nombramientos/:id', verificarAutenticacion, requierePermiso('GESTIONAR_ASAMBLEISTAS'), asambleistaController.actualizarNombramiento);
 app.delete('/api/nombramientos/:id', verificarAutenticacion, requierePermiso('GESTIONAR_ASAMBLEISTAS'), asambleistaController.eliminarNombramiento);
 
-app.use('/api/certificaciones', certificacionRoutes);
-
 // Rutas vistas
 app.get('/', (req, res) => {
     res.redirect('/login');
@@ -64,16 +61,6 @@ app.get('/buscador', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
 
-app.get('/vista-comisiones', (req, res) => {
-
-  res.sendFile(
-    path.join(
-      __dirname,
-      'src/views/comisiones.view.html'
-    )
-  );
-});
-
 app.get('/asambleistas', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/buscador.html'));
 });
@@ -84,6 +71,10 @@ app.get('/propuesta-nueva', (req, res) => {
 
 app.get('/preview-certificacion', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/views/certificacion-preview.html'));
+});
+
+app.get('/vista-comisiones', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/views/comisiones.view.html'));
 });
 
 app.get('/vista-reportes', (req, res) => {
