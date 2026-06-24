@@ -233,6 +233,64 @@
             border-top: 1px solid #000;
             padding-top: 0.5rem;
         }
+        /* Estilos para el árbol de normativas */
+        .arbol-normativo {
+            background-color: #f9f9f9;
+            border-left: 4px solid #2c7da0;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .elemento-arbol {
+            margin: 0.5rem 0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+        }
+        .elemento-arbol.nivel-titulo {
+            font-weight: bold;
+            font-size: 1.1rem;
+            background-color: #e8f4f8;
+            border-left: 4px solid #2c7da0;
+            margin-left: 0;
+        }
+        .elemento-arbol.nivel-articulo {
+            font-weight: bold;
+            font-size: 1rem;
+            background-color: #f0f8ff;
+            margin-left: 1.5rem;
+        }
+        .elemento-arbol.nivel-inciso {
+            font-size: 0.95rem;
+            margin-left: 3rem;
+            padding-left: 1.2rem;
+        }
+        .elemento-arbol.nivel-subinciso {
+            font-size: 0.9rem;
+            margin-left: 4.5rem;
+            padding-left: 1.2rem;
+            color: #555;
+        }
+        .elemento-etiqueta {
+            font-weight: bold;
+            color: #2c7da0;
+            min-width: 3rem;
+            display: inline-block;
+        }
+        .elemento-contenido {
+            display: inline;
+            color: #333;
+        }
+        .selector-reglamento {
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 1rem;
+        }
+        .selector-reglamento select {
+            width: 300px;
+            padding: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +427,28 @@
         <button id="guardarNombramientoBtn">Guardar nombramiento</button>
         <button id="cancelarNombramientoBtn" class="btn-secundario">Cancelar</button>
         <div id="nombramientoResultado" style="margin-top:0.5rem;"></div>
+    </div>
+</div>
+
+<hr>
+
+<!-- Visualización de Normativas y Reglamentos -->
+<div class="seccion">
+    <h2>Consulta de Normativas y Reglamentos</h2>
+    
+    <div class="form-group">
+        <div class="selector-reglamento">
+            <label for="selectorReglamento">Seleccionar reglamento:</label><br><br>
+            <select id="selectorReglamento">
+                <option value="">-- Cargando reglamentos --</option>
+            </select>
+            <button id="btnMostrarArbol" style="margin-left: 0.5rem;">Mostrar árbol</button>
+        </div>
+    </div>
+
+    <div id="contenedorArbol" style="display:none; margin-top: 1.5rem;">
+        <h3 id="tituloArbol"></h3>
+        <div id="arbolNormativo" class="arbol-normativo"></div>
     </div>
 </div>
 
@@ -917,9 +997,95 @@ async function cargarNombramientos(asambleistaId) {
     // Filtro en el listado
     document.getElementById('filtroListado').addEventListener('input', () => cargarListadoAsambleistas());
 
+    // ========== NORMATIVAS Y REGLAMENTOS ==========
+    async function cargarReglamentos() {
+        try {
+            const res = await authFetch('/normativa/reglamentos');
+            if (!res.ok) throw new Error('Error al cargar reglamentos');
+            const data = await res.json();
+            
+            const selector = document.getElementById('selectorReglamento');
+            selector.innerHTML = '<option value="">-- Seleccionar un reglamento --</option>';
+            
+            if (data.ok && data.data && data.data.length > 0) {
+                data.data.forEach(reglamento => {
+                    const option = document.createElement('option');
+                    option.value = reglamento.id_reglamento;
+                    option.textContent = `${reglamento.nombre_normativa} (${reglamento.sigla})`;
+                    selector.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando reglamentos:', error);
+            mostrarMensaje('Error al cargar reglamentos', true);
+        }
+    }
+
+    function renderizarElementoArbol(elemento) {
+        const nivelClass = `nivel-${elemento.nivel.toLowerCase().replace(/[- ]/g, '')}`;
+        const div = document.createElement('div');
+        div.className = `elemento-arbol ${nivelClass}`;
+        
+        const etiquetaSpan = document.createElement('span');
+        etiquetaSpan.className = 'elemento-etiqueta';
+        etiquetaSpan.textContent = elemento.numero_etiqueta;
+        
+        const contenidoSpan = document.createElement('span');
+        contenidoSpan.className = 'elemento-contenido';
+        contenidoSpan.textContent = elemento.contenido_texto;
+        
+        div.appendChild(etiquetaSpan);
+        div.appendChild(contenidoSpan);
+        
+        return div;
+    }
+
+    function renderizarArbol(elementos) {
+        const contenedor = document.getElementById('arbolNormativo');
+        contenedor.innerHTML = '';
+        
+        if (!elementos || elementos.length === 0) {
+            contenedor.innerHTML = '<p>No se encontraron elementos en este reglamento.</p>';
+            return;
+        }
+
+        elementos.forEach(elemento => {
+            const elementoDiv = renderizarElementoArbol(elemento);
+            contenedor.appendChild(elementoDiv);
+        });
+    }
+
+    document.getElementById('btnMostrarArbol').addEventListener('click', async () => {
+        const idReglamento = document.getElementById('selectorReglamento').value;
+        if (!idReglamento) {
+            mostrarMensaje('Seleccione un reglamento', true);
+            return;
+        }
+
+        try {
+            const res = await authFetch(`/normativa/arbol/${idReglamento}`);
+            if (!res.ok) throw new Error('Error al obtener el árbol');
+            const data = await res.json();
+            
+            if (data.ok && data.data) {
+                const reglamentoSeleccionado = document.getElementById('selectorReglamento').selectedOptions[0].textContent;
+                document.getElementById('tituloArbol').textContent = reglamentoSeleccionado;
+                renderizarArbol(data.data);
+                document.getElementById('contenedorArbol').style.display = 'block';
+                mostrarMensaje('Árbol cargado correctamente');
+            } else {
+                mostrarMensaje('No se pudo cargar el árbol', true);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarMensaje('Error al cargar el árbol: ' + error.message, true);
+        }
+    });
+
     // Inicializar
     aplicarPermisosVista();
     cargarListadoAsambleistas();
+    cargarReglamentos();
     cargarCatalogos();
 </script>
 </body>
